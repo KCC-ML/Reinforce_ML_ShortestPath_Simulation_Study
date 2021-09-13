@@ -1,4 +1,5 @@
 from tkinter import *
+import random
 
 window = Tk()
 window.title("grid world")
@@ -14,13 +15,14 @@ canvas.pack(fill = "both", expand = True)
 
 line_len = int((canvas_width - 40) / grid_dim)
 lines = []
-row = 0; col = 0
+row = 0
 for line_num in range(grid_dim): # 세로 라인 생성
+    col = 0
     for start_line in range(20, canvas_width - 20 + 1, line_len):
         canvas.create_line(start_line, (line_num*line_len+20), start_line, (line_num*line_len+20) + line_len, fill = "white")
         lines.append({'index': [row, col],
                        'polygon_type': 'line',
-                      'role': 'base',
+                      'dirt': 'height',
                        'start_x': start_line,
                        'start_y': line_num*line_len+20,
                        'end_x': start_line,
@@ -28,41 +30,58 @@ for line_num in range(grid_dim): # 세로 라인 생성
                        'outline': 'white'})
         col += 1
     row += 1
-row = 0; col = 0
+row = 0
 for line_num in range(grid_dim + 1): # 가로 라인 생성
+    col = 0
     for start_line in range(20, canvas_width - 20 - line_len + 1, line_len):
         canvas.create_line(start_line, (line_num*line_len+20), start_line + line_len, (line_num*line_len+20), fill="white")
         lines.append({'index': [row, col],
                        'polygon_type': 'line',
-                      'role': 'base',
+                      'dirt': 'width',
                        'start_x': start_line,
                        'start_y': line_num*line_len+20,
-                       'end_x': start_line,
-                       'end_y': (line_num*line_len+20) + line_len,
+                       'end_x': start_line + line_len,
+                       'end_y': (line_num*line_len+20),
                        'outline': 'white'})
         col += 1
     row += 1
 
 # 외벽 생성
+print(lines)
+for col in range(grid_dim + 1):
+    for line in lines:
+        if (line['index'] == [0, col]) and (line['dirt'] == 'width'):
+            canvas.create_line(line['start_x'], line['start_y'], line['end_x'],
+                               line['end_y'], fill="red")
+            line['outline'] = 'red'
+        if (line['index'] == [grid_dim, col]) and (line['dirt'] == 'width'):
+            canvas.create_line(line['start_x'], line['start_y'], line['end_x'],
+                               line['end_y'], fill="red")
+            line['outline'] = 'red'
+
+for row in range(grid_dim + 1):
+    for line in lines:
+        if (line['index'] == [row, 0]) and (line['dirt'] == 'height'):
+            canvas.create_line(line['start_x'], line['start_y'], line['end_x'],
+                               line['end_y'], fill="red")
+            line['outline'] = 'red'
+        if (line['index'] == [row, grid_dim]) and (line['dirt'] == 'height'):
+            canvas.create_line(line['start_x'], line['start_y'], line['end_x'],
+                               line['end_y'], fill="red")
+            line['outline'] = 'red'
+
+# 내벽 생성 / 칸을 막는 경우에 대한 예외처리 필요
+for _ in range(int(grid_dim**2 * 0.1)):
+    rand_row = random.randrange(1, grid_dim)
+    rand_col = random.randrange(1, grid_dim)
+    rand_dirt = random.choice(['width', 'height'])
+    for line in lines:
+        if (line['index'] == [rand_row, rand_col]) and (line['dirt'] == rand_dirt) and (line['outline'] == 'white'):
+            canvas.create_line(line['start_x'], line['start_y'], line['end_x'],
+                               line['end_y'], fill="red")
+            line['outline'] = 'red'
+
+# 에이전트 삽입
 
 
 window.mainloop()
-
-
-
-
-# rectangles = []
-# rect_size = int((canvas_width - 40) / grid_dim)
-# row = 0; col = 0
-# for rect_y in range(20, canvas_width-20-rect_size+1, rect_size):
-#     for rect_x in range(20, canvas_width-20-rect_size+1, rect_size):
-#         canvas.create_rectangle(rect_x, rect_y, rect_x+rect_size, rect_y+rect_size, outline="white", width=2)
-#         rectangles.append({'index': [row, col],
-#                            'polygon_type': 'rectangle',
-#                            'start_x': rect_x,
-#                            'start_y': rect_y,
-#                            'end_x': rect_x+rect_size,
-#                            'end_y': rect_y+rect_size,
-#                            'outline': 'white'})
-#         col += 1
-#     row += 1
