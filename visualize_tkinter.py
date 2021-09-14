@@ -1,5 +1,8 @@
 from tkinter import *
 import random
+from packman import *
+from PIL import Image,ImageTk
+import numpy as np
 
 window = Tk()
 window.title("grid world")
@@ -7,8 +10,18 @@ window.geometry("500x500")
 window.resizable(True, True)
 
 n = int(input())
+# grid_dim = n
+
+# 에이전트 삽입
+env = Env(n)
+pacman = Pacman(n)
+gridmap = pacman.gridmap
+print(gridmap)
+print(pacman.position)
 grid_dim = n
 
+
+# 시각화
 canvas_width = canvas_height = 500
 canvas = Canvas(window, width = canvas_width, height = canvas_height, bg = "black", bd = 2)
 canvas.pack(fill = "both", expand = True)
@@ -81,7 +94,25 @@ for _ in range(int(grid_dim**2 * 0.1)):
                                line['end_y'], fill="red")
             line['outline'] = 'red'
 
-# 에이전트 삽입
 
+# ndarray와 좌표 연동
+#Load an image in the script
+img= (Image.open("pngegg.png"))
+
+#Resize the Image using resize method
+resized_image = img.resize((line_len-5, line_len-5))
+new_image = ImageTk.PhotoImage(resized_image)
+
+#Add image to the Canvas Items
+# 칸의 왼쪽 위 꼭짓점 좌표에 대하여 gridmap에서의 pacman 좌표를 표시
+pacman_x = int(20 + line_len * pacman.position[0])
+pacman_y = int(20 + line_len * pacman.position[1])
+canvas.create_image(pacman_x, pacman_y, anchor=NW, image=new_image)
+
+# pacman 이동
+pacman.set_packman()
+pacman_x = int(20 + line_len * pacman.position[0])
+pacman_y = int(20 + line_len * pacman.position[1])
+canvas.create_image(pacman_x, pacman_y, anchor=NW, image=new_image)
 
 window.mainloop()

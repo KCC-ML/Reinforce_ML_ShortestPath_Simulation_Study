@@ -24,11 +24,7 @@ class Env():
     def _grid(self):
         # create gridmap
         n = self.n
-        gridmap = np.zeros((n+2, n+2))
-        gridmap[0, :] = 1
-        gridmap[-1, :] = 1
-        gridmap[:, 0] = 1
-        gridmap[:, -1] = 1
+        gridmap = np.zeros((n, n))
         self.gridmap = gridmap
         self._wall()
 
@@ -42,8 +38,8 @@ class Env():
         wall_sum = int((self.n**2) * percentage)
         cnt_wall = 0
         while cnt_wall <= wall_sum:
-            w_x = random.randrange(1, n+1)
-            w_y = random.randrange(1, n+1)
+            w_x = random.randrange(1, n)
+            w_y = random.randrange(1, n)
 
             # Check the grid is closed.
             if 2 <= w_x <= n - 3 and 2 <= w_y <= n - 3:
@@ -68,8 +64,8 @@ class Env():
         n = self.n
 
         while True:
-            e_x = random.randrange(1, n + 1)
-            e_y = random.randrange(1, n + 1)
+            e_x = random.randrange(1, n)
+            e_y = random.randrange(1, n)
             if self.gridmap[e_y][e_x] == 0:
                 self.gridmap[e_y][e_x] = 2
                 self.gridmap_goal = np.array([e_y, e_x])
@@ -143,8 +139,8 @@ class Pacman(Env):
         cardinal_point_list = ["east", "west", "south", "north"]
 
         while True:
-            p_x = random.randrange(1, n + 1)
-            p_y = random.randrange(1, n + 1)
+            p_x = random.randrange(1, n)
+            p_y = random.randrange(1, n)
 
             if gridmap[p_y][p_x] == 0:
                 self.gridmap[p_y][p_x] = -1
