@@ -1,0 +1,60 @@
+import numpy as np
+import random
+import time
+from packman_entity import *
+from simulation_entity import *
+
+class World:
+    def __init__(self):
+        n = int(input("Input grid size N:"))
+
+        # self.env = Env(n)
+        self.pacman = Pacman(n)
+        gridmap = self.pacman.gridmap
+        print("Initialize")
+        self.pacman.visualization()
+        print("-------------------------------")
+        input("press any key")
+
+        self.step = 0
+        self.pacman_action_list = ["straight", "left", "right"]
+
+    def main(self):
+        self.window = WindowTkinter().create_window()
+        self.cv = CanvasGrid(self.window, self.pacman)
+        self.cv.set_agent(self.pacman)
+        print(self.pacman.goal_position())
+        self.cv.set_target(self.pacman.goal_position())
+
+        self.cv.canvas.bind_all("<Key>", self.iter_step)
+
+        self.window.mainloop()
+
+        print("Pacman arrived at goal in {} steps.".format(self.step))
+
+
+    def iter_step(self, event):
+        print(event)
+        if event.keysym and np.any(self.pacman.gridmap_goal != self.pacman.position):
+            print("-------------------------------")
+            self.step += 1
+            print("step: ", self.step)
+            # pacman_direction = random.choice(pacman_action_list)
+            pacman_direction = np.random.choice(self.pacman_action_list, 1, p=[0.8,0.1,0.1])
+            if pacman_direction == "straight":
+                if self.pacman.straight(self.cv.wall_lines(), self.cv.agent_coordinate()) == 1:
+                    self.window.destroy()
+                self.pacman.visualization()
+            elif pacman_direction == "left":
+                self.pacman.left()
+                self.pacman.visualization()
+            elif pacman_direction == "right":
+                self.pacman.right()
+                self.pacman.visualization()
+            self.cv.set_agent(self.pacman)
+            time.sleep(2)
+
+
+if __name__ == '__main__':
+    world = World()
+    world.main()
