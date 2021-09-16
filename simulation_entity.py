@@ -111,8 +111,15 @@ class CanvasGrid:
     def wall_lines(self):
         return self.walls
 
-    def set_agent(self, agent):
-        img = PIL.Image.open("pngegg2.png")
+    def set_agent(self, agent, cardinal_point):
+        if cardinal_point == "east":
+            img = PIL.Image.open("pngegg2.png")
+        elif cardinal_point == "west":
+            img = PIL.Image.open("pngegg2.png").transpose(PIL.Image.ROTATE_180)
+        elif cardinal_point == "south":
+            img = PIL.Image.open("pngegg2.png").transpose(PIL.Image.ROTATE_270)
+        elif cardinal_point == "north":
+            img = PIL.Image.open("pngegg2.png").transpose(PIL.Image.ROTATE_90)
 
         resized_image = img.resize((self.line_len-10, self.line_len-10))
         self.agent_image = PIL.ImageTk.PhotoImage(resized_image, master=self.window)

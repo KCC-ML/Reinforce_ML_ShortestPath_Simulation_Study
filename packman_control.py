@@ -24,7 +24,7 @@ class World:
     def main(self):
         self.window = WindowTkinter().create_window()
         self.cv = CanvasGrid(self.window, self.pacman)
-        self.cv.set_agent(self.pacman)
+        self.cv.set_agent(self.pacman, self.pacman.cardinal_point)
         self.cv.set_target(self.pacman.goal_position())
 
         self.thread.daemon = True
@@ -54,7 +54,7 @@ class World:
             elif pacman_direction == "right":
                 self.pacman.right()
                 self.pacman.visualization()
-            self.cv.set_agent(self.pacman)
+            self.cv.set_agent(self.pacman, self.pacman.cardinal_point)
             time.sleep(1)
 
 
