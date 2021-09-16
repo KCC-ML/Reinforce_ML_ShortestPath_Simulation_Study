@@ -140,14 +140,3 @@ class CanvasGrid:
         self.target_y = int(20 + self.line_len * target_position[0] + self.line_len/2)
         self.target_x = int(20 + self.line_len * target_position[1] + self.line_len/2)
         self.canvas.create_image(self.target_x, self.target_y, anchor=CENTER, image=self.target_image)
-
-    def gridmap_coordinate(self):
-        self.gridmap_x = np.zeros((self.grid_dim, self.grid_dim))
-        for row in range(n):
-            for col in range(n):
-                gridmap_x[row][col] = int(20 + self.line_len * col + self.line_len/2)
-
-        self.gridmap_y = np.zeros((self.grid_dim, self.grid_dim))
-        for row in range(n):
-            for col in range(n):
-                gridmap_y[row][col] = int(20 + self.line_len * row + self.line_len/2)

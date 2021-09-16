@@ -3,8 +3,8 @@ import random
 import time
 from simulation_entity import CanvasGrid
 # set seed number to check env. goes right
-# random.seed(13)
-# np.random.seed(13)
+random.seed(13)
+np.random.seed(13)
 
 
 class Env():
@@ -113,7 +113,7 @@ class Pacman(Env):
                 elif cardinal_point == "north" and wall['dirt'] == 'width' and wall['start_y'] < agent_coordinate[1]:
                     if (0 > (wall['start_y'] - agent_coordinate[1]) > (-line_len)) and (wall['start_x'] < agent_coordinate[0] < wall['end_x']):
                         print("pacman goes forward but meets wall")
-                    return None
+                        return None
         except IndexError:
             pass
 
@@ -163,8 +163,8 @@ class Pacman(Env):
         cardinal_point_list = ["east", "west", "south", "north"]
 
         while True:
-            p_x = random.randrange(1, n)
-            p_y = random.randrange(1, n)
+            p_x = random.randrange(0, n)
+            p_y = random.randrange(0, n)
 
             if gridmap[p_y][p_x] == 0:
                 self.gridmap[p_y][p_x] = -1

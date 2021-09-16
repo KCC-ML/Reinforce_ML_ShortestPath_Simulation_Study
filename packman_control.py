@@ -38,7 +38,6 @@ class World:
 
     def iter_step(self):
         while True:
-            # if event.keysym and np.any(self.pacman.gridmap_goal != self.pacman.position):
             print("-------------------------------")
             self.step += 1
             print("step: ", self.step)
