@@ -1,8 +1,6 @@
-import numpy as np
-import random
 import time
-from packman_entity import *
-from simulation_entity import *
+from scripts.packman_entity import *
+from scripts.simulation_entity import *
 import threading
 
 class World:

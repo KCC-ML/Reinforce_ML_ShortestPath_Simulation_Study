@@ -1,7 +1,7 @@
 import numpy as np
 import random
-import time
-from simulation_entity import CanvasGrid
+
+
 # set seed number to check env. goes right
 # random.seed(13)
 # np.random.seed(13)
@@ -83,55 +83,50 @@ class Pacman(Env):
         p_x = self.position[1]
 
         if cardinal_point == "east":
-            tmp_p_x = p_x + 1
-            tmp_p_y = p_y
+            if wall_lines[1, p_y, p_x] == 1:
+                print("pacman goes forward but meets wall")
+                tmp_p_x = p_x
+                tmp_p_y = p_y
+            else:
+                print('pacman goes forward')
+                tmp_p_x = p_x + 1
+                tmp_p_y = p_y
         elif cardinal_point == "west":
-            tmp_p_x = p_x - 1
-            tmp_p_y = p_y
+            if wall_lines[3, p_y, p_x] == 1:
+                print("pacman goes forward but meets wall")
+                tmp_p_x = p_x
+                tmp_p_y = p_y
+            else:
+                print('pacman goes forward')
+                tmp_p_x = p_x - 1
+                tmp_p_y = p_y
         elif cardinal_point == "south":
-            tmp_p_y = p_y + 1
-            tmp_p_x = p_x
+            if wall_lines[2, p_y, p_x] == 1:
+                print("pacman goes forward but meets wall")
+                tmp_p_x = p_x
+                tmp_p_y = p_y
+            else:
+                print('pacman goes forward')
+                tmp_p_y = p_y + 1
+                tmp_p_x = p_x
         elif cardinal_point == "north":
-            tmp_p_y = p_y - 1
-            tmp_p_x = p_x
+            if wall_lines[0, p_y, p_x] == 1:
+                print("pacman goes forward but meets wall")
+                tmp_p_x = p_x
+                tmp_p_y = p_y
+            else:
+                print('pacman goes forward')
+                tmp_p_y = p_y - 1
+                tmp_p_x = p_x
 
-        try:
-            line_len = wall_lines[0]['length']
-            for wall in wall_lines:
-                if cardinal_point == "east" and wall['dirt'] == 'height':
-                    if (line_len > (wall['start_x'] - agent_coordinate[0]) > 0) and (wall['start_y'] < agent_coordinate[1] < wall['end_y']):
-                        print("pacman goes forward but meets wall")
-                        return None
-                elif cardinal_point == "west" and wall['dirt'] == 'height' and wall['start_x'] < agent_coordinate[0]:
-                    if (0 > (wall['start_x'] - agent_coordinate[0]) > (-line_len)) and (wall['start_y'] < agent_coordinate[1] < wall['end_y']):
-                        print("pacman goes forward but meets wall")
-                        return None
-                elif cardinal_point == "south" and wall['dirt'] == 'width' and wall['start_y'] > agent_coordinate[1]:
-                    if (line_len > (wall['start_y'] - agent_coordinate[1]) > 0) and (wall['start_x'] < agent_coordinate[0] < wall['end_x']):
-                        print("pacman goes forward but meets wall")
-                        return None
-                elif cardinal_point == "north" and wall['dirt'] == 'width' and wall['start_y'] < agent_coordinate[1]:
-                    if (0 > (wall['start_y'] - agent_coordinate[1]) > (-line_len)) and (wall['start_x'] < agent_coordinate[0] < wall['end_x']):
-                        print("pacman goes forward but meets wall")
-                    return None
-        except IndexError:
-            pass
-
-        if tmp_p_x < 0 or tmp_p_x >= self.n or tmp_p_y < 0 or tmp_p_y >= self.n:
-            print("pacman goes forward but meets wall")
-        elif self.gridmap[tmp_p_y][tmp_p_x] == 0:
+        if self.gridmap[tmp_p_y][tmp_p_x] == 0:
             self.gridmap[p_y][p_x] = 0
             self.position = np.array([tmp_p_y, tmp_p_x])
-            print('pacman goes forward')
         elif self.gridmap[tmp_p_y][tmp_p_x] == 2:
             self.gridmap[p_y][p_x] = 0
             self.position = np.array([tmp_p_y, tmp_p_x])
             print('pacman arrives goal!!')
             return 1
-        else:
-            print("pacman goes forward but meets wall")
-
-        # return p_x, p_y
 
     def left(self):
         print("pacman turns left")

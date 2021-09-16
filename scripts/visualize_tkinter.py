@@ -1,6 +1,6 @@
 from tkinter import *
 import random
-from packman import *
+from scripts.packman import *
 from PIL import Image,ImageTk
 import numpy as np
 
@@ -97,7 +97,7 @@ for _ in range(int(grid_dim**2 * 0.1)):
 
 # ndarray와 좌표 연동
 #Load an image in the script
-img= (Image.open("pngegg.png"))
+img= (Image.open("../figures/pngegg.png"))
 
 #Resize the Image using resize method
 resized_image = img.resize((line_len-5, line_len-5))
