@@ -158,8 +158,8 @@ class Pacman(Env):
         cardinal_point_list = ["east", "west", "south", "north"]
 
         while True:
-            p_x = random.randrange(1, n)
-            p_y = random.randrange(1, n)
+            p_x = random.randrange(0, n)
+            p_y = random.randrange(0, n)
 
             if gridmap[p_y][p_x] == 0:
                 self.gridmap[p_y][p_x] = -1
