@@ -131,7 +131,6 @@ class CanvasGrid:
         # 칸의 왼쪽 위 꼭짓점 좌표에 대하여 gridmap에서의 pacman 좌표를 표시
         self.agent_y = int(20 + self.line_len * agent.position[0] + self.line_len/2)
         self.agent_x = int(20 + self.line_len * agent.position[1] + self.line_len/2)
-        print(agent.position, self.line_len, self.agent_x, self.agent_y)
         self.canvas.create_image(self.agent_x, self.agent_y, anchor=CENTER, image=self.agent_image)
 
     def agent_coordinate(self):

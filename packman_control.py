@@ -3,6 +3,7 @@ import random
 import time
 from packman_entity import *
 from simulation_entity import *
+import threading
 
 class World:
     def __init__(self):
@@ -13,6 +14,7 @@ class World:
         gridmap = self.pacman.gridmap
         print("Initialize")
         self.pacman.visualization()
+        self.thread = threading.Thread(target=self.iter_step)
         print("-------------------------------")
         input("press any key")
 
@@ -23,19 +25,20 @@ class World:
         self.window = WindowTkinter().create_window()
         self.cv = CanvasGrid(self.window, self.pacman)
         self.cv.set_agent(self.pacman)
-        print(self.pacman.goal_position())
         self.cv.set_target(self.pacman.goal_position())
 
-        self.cv.canvas.bind_all("<Key>", self.iter_step)
+        self.thread.daemon = True
+        self.thread.start()
+        # self.cv.canvas.bind_all("<Key>", self.iter_step)
 
         self.window.mainloop()
 
         print("Pacman arrived at goal in {} steps.".format(self.step))
 
 
-    def iter_step(self, event):
-        print(event)
-        if event.keysym and np.any(self.pacman.gridmap_goal != self.pacman.position):
+    def iter_step(self):
+        while True:
+            # if event.keysym and np.any(self.pacman.gridmap_goal != self.pacman.position):
             print("-------------------------------")
             self.step += 1
             print("step: ", self.step)
@@ -52,7 +55,7 @@ class World:
                 self.pacman.right()
                 self.pacman.visualization()
             self.cv.set_agent(self.pacman)
-            time.sleep(2)
+            time.sleep(1)
 
 
 if __name__ == '__main__':

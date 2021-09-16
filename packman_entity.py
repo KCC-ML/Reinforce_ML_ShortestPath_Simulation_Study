@@ -65,7 +65,6 @@ class Env():
                 self.gridmap[e_y][e_x] = 2
                 self.gridmap_goal = np.array([e_y, e_x])
                 break
-        print(self.gridmap_goal)
 
     def goal_position(self):
         return self.gridmap_goal
@@ -96,11 +95,8 @@ class Pacman(Env):
             tmp_p_y = p_y - 1
             tmp_p_x = p_x
 
-        print(wall_lines[0]['start_x'], wall_lines[0]['end_x'])
-        print(wall_lines)
         line_len = wall_lines[0]['length']
         for wall in wall_lines:
-            print(line_len, -line_len)
             if cardinal_point == "east" and wall['dirt'] == 'height':
                 if (line_len > (wall['start_x'] - agent_coordinate[0]) > 0) and (wall['start_y'] < agent_coordinate[1] < wall['end_y']):
                     print("pacman goes forward but meets wall")
