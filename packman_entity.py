@@ -95,24 +95,27 @@ class Pacman(Env):
             tmp_p_y = p_y - 1
             tmp_p_x = p_x
 
-        line_len = wall_lines[0]['length']
-        for wall in wall_lines:
-            if cardinal_point == "east" and wall['dirt'] == 'height':
-                if (line_len > (wall['start_x'] - agent_coordinate[0]) > 0) and (wall['start_y'] < agent_coordinate[1] < wall['end_y']):
-                    print("pacman goes forward but meets wall")
+        try:
+            line_len = wall_lines[0]['length']
+            for wall in wall_lines:
+                if cardinal_point == "east" and wall['dirt'] == 'height':
+                    if (line_len > (wall['start_x'] - agent_coordinate[0]) > 0) and (wall['start_y'] < agent_coordinate[1] < wall['end_y']):
+                        print("pacman goes forward but meets wall")
+                        return None
+                elif cardinal_point == "west" and wall['dirt'] == 'height' and wall['start_x'] < agent_coordinate[0]:
+                    if (0 > (wall['start_x'] - agent_coordinate[0]) > (-line_len)) and (wall['start_y'] < agent_coordinate[1] < wall['end_y']):
+                        print("pacman goes forward but meets wall")
+                        return None
+                elif cardinal_point == "south" and wall['dirt'] == 'width' and wall['start_y'] > agent_coordinate[1]:
+                    if (line_len > (wall['start_y'] - agent_coordinate[1]) > 0) and (wall['start_x'] < agent_coordinate[0] < wall['end_x']):
+                        print("pacman goes forward but meets wall")
+                        return None
+                elif cardinal_point == "north" and wall['dirt'] == 'width' and wall['start_y'] < agent_coordinate[1]:
+                    if (0 > (wall['start_y'] - agent_coordinate[1]) > (-line_len)) and (wall['start_x'] < agent_coordinate[0] < wall['end_x']):
+                        print("pacman goes forward but meets wall")
                     return None
-            elif cardinal_point == "west" and wall['dirt'] == 'height' and wall['start_x'] < agent_coordinate[0]:
-                if (0 > (wall['start_x'] - agent_coordinate[0]) > (-line_len)) and (wall['start_y'] < agent_coordinate[1] < wall['end_y']):
-                    print("pacman goes forward but meets wall")
-                    return None
-            elif cardinal_point == "south" and wall['dirt'] == 'width' and wall['start_y'] > agent_coordinate[1]:
-                if (line_len > (wall['start_y'] - agent_coordinate[1]) > 0) and (wall['start_x'] < agent_coordinate[0] < wall['end_x']):
-                    print("pacman goes forward but meets wall")
-                    return None
-            elif cardinal_point == "north" and wall['dirt'] == 'width' and wall['start_y'] < agent_coordinate[1]:
-                if (0 > (wall['start_y'] - agent_coordinate[1]) > (-line_len)) and (wall['start_x'] < agent_coordinate[0] < wall['end_x']):
-                    print("pacman goes forward but meets wall")
-                    return None
+        except IndexError:
+            pass
 
         if tmp_p_x < 0 or tmp_p_x >= self.n or tmp_p_y < 0 or tmp_p_y >= self.n:
             print("pacman goes forward but meets wall")

@@ -59,5 +59,7 @@ class World:
 
 
 if __name__ == '__main__':
-    world = World()
-    world.main()
+    try:
+        World().main()
+    except ValueError:
+        print("grid size N > 1")
