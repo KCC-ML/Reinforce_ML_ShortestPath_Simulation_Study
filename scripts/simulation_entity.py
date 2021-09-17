@@ -29,7 +29,7 @@ class CanvasGrid:
     def create_canvas(self):
         self.canvas_width = 500
         self.canvas_height = 500
-        self.canvas = Canvas(self.window, width = self.canvas_width, height = self.canvas_height, bg = "black", bd = 2)
+        self.canvas = Canvas(self.window, width = self.canvas_width, height=self.canvas_height, bg="black", bd=2)
         self.canvas.pack(fill = "both", expand = True)
 
     def draw_line(self):
@@ -83,7 +83,6 @@ class CanvasGrid:
                 end_y = start_y - self.line_len
 
             self.canvas.create_line(start_x, start_y, end_x, end_y, fill='blue', width=5)
-        self.canvas.create_line(start_x, start_y, end_x, end_y, fill='blue', width=5)
 
     def generate_wall(self):
         # (direction, grid_row, grid_col), initiate with all zeros (no inner walls)
@@ -97,9 +96,9 @@ class CanvasGrid:
         ratio = 0.1
         tot_wall_num = 2 * self.grid_dim * (self.grid_dim - 1)
         cnt = 0
-        while cnt <= int(tot_wall_num * ratio):
+        while cnt < int(tot_wall_num * ratio):
             rand_num = random.randint(0, tot_wall_num-1)
-            wall_direction = (rand_num // self.grid_dim**2) - 1
+            wall_direction = (rand_num // self.grid_dim**2)
             wall_row = ((rand_num % self.grid_dim**2) // self.grid_dim) - 1
             wall_col = ((rand_num % self.grid_dim**2) % self.grid_dim) - 1
 

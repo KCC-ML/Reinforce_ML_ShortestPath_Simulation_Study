@@ -6,6 +6,8 @@ import threading
 class World:
     def __init__(self):
         n = int(input("Input grid size N:"))
+        if n == 1:
+            raise ValueError
 
         # self.env = Env(n)
         self.pacman = Pacman(n)
