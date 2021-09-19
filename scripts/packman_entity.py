@@ -7,7 +7,7 @@ import random
 # np.random.seed(13)
 
 
-class Env():
+class Env:
     def __init__(self, n):
         self.n = n
         self.percentage = 0.1
@@ -20,51 +20,23 @@ class Env():
         n = self.n
         gridmap = np.zeros((n, n))
         self.gridmap = gridmap
-        # self._wall()
-        self._goal()
-
-    def _wall(self):
-        # The total number of wall should be less than 'percentage'.
-        # However, there should not be isolated grid which means there is no closed grid.
-        percentage = self.percentage
-        n = self.n
-        gridmap = self.gridmap
-
-        wall_sum = int((self.n**2) * percentage)
-        cnt_wall = 0
-        while cnt_wall <= wall_sum:
-            w_x = random.randrange(1, n)
-            w_y = random.randrange(1, n)
-
-            # Check the grid is closed.
-            if 2 <= w_x <= n - 3 and 2 <= w_y <= n - 3:
-                if int(gridmap[w_y + 1][w_x - 1]) + int(gridmap[w_y + 1][w_x + 1]) + int(gridmap[w_y + 2][w_x]) == 3 \
-                        or int(gridmap[w_y - 1][w_x - 1]) + int(gridmap[w_y + 1][w_x - 1]) + int(
-                    gridmap[w_y][w_x - 2]) == 3 \
-                        or int(gridmap[w_y - 1][w_x - 1]) + int(gridmap[w_y - 1][w_x + 1]) + int(
-                    gridmap[w_y - 2][w_x]) == 3 \
-                        or int(gridmap[w_y - 1][w_x + 1]) + int(gridmap[w_y + 1][w_x + 1]) + int(
-                    gridmap[w_y][w_x + 2]) == 3:
-                    continue
-                else:
-                    gridmap[w_y][w_x] = 1
-                    cnt_wall += 1
-            else:
-                gridmap[w_y][w_x] = 1
-                cnt_wall += 1
-        self.gridmap = gridmap
         self._goal()
 
     def _goal(self):
-        n = self.n
+        # model-based
+        self.gridmap[3][2] = 2
+        self.gridmap_goal = np.array([3, 2])
 
-        while True:
-            e_x = random.randrange(n)
-            e_y = random.randrange(n)
-            if self.gridmap[e_y][e_x] == 0:
-                self.gridmap[e_y][e_x] = 2
-                self.gridmap_goal = np.array([e_y, e_x])
-                break
+        # model-free
+        # n = self.n
+        #
+        # while True:
+        #     e_x = random.randrange(n)
+        #     e_y = random.randrange(n)
+        #     if self.gridmap[e_y][e_x] == 0:
+        #         self.gridmap[e_y][e_x] = 2
+        #         self.gridmap_goal = np.array([e_y, e_x])
+        #         break
 
     def goal_position(self):
         return self.gridmap_goal
@@ -153,19 +125,24 @@ class Pacman(Env):
         return self.cardinal_point
 
     def set_packman(self):
-        n = self.n
-        gridmap = self.gridmap
-        cardinal_point_list = ["east", "west", "south", "north"]
+        self.gridmap[0][0] = -1
+        self.position = np.array([0, 0])
+        self.cardinal_point = "north"
 
-        while True:
-            p_x = random.randrange(0, n)
-            p_y = random.randrange(0, n)
-
-            if gridmap[p_y][p_x] == 0:
-                self.gridmap[p_y][p_x] = -1
-                self.position = np.array([p_y, p_x])
-                self.cardinal_point = cardinal_point_list[random.randrange(0, 4)]
-                break
+        # model-free
+        # n = self.n
+        # gridmap = self.gridmap
+        # cardinal_point_list = ["east", "west", "south", "north"]
+        #
+        # while True:
+        #     p_x = random.randrange(0, n)
+        #     p_y = random.randrange(0, n)
+        #
+        #     if gridmap[p_y][p_x] == 0:
+        #         self.gridmap[p_y][p_x] = -1
+        #         self.position = np.array([p_y, p_x])
+        #         self.cardinal_point = cardinal_point_list[random.randrange(0, 4)]
+        #         break
 
     def visualization(self):
         gridmap = self.gridmap.tolist()
