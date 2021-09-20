@@ -1,6 +1,7 @@
 import time
 from packman_entity import *
 from simulation_entity import *
+from chapter2_1 import *
 import threading
 
 class World:
@@ -17,12 +18,14 @@ class World:
         self.step = 0
         self.pacman_action_list = ["straight", "left", "right"]
 
+
     def main(self):
         self.window = WindowTkinter().create_window()
         self.cv = CanvasGrid(self.window, self.pacman)
         self.cv.set_agent(self.pacman, self.pacman.cardinal_point)
         self.cv.set_target(self.pacman.goal_position())
 
+        self.MDP = MDP(self.cv)
         self.thread.daemon = True
         self.thread.start()
         # self.cv.canvas.bind_all("<Key>", self.iter_step)
