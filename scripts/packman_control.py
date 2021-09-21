@@ -1,7 +1,7 @@
 import time
 from packman_entity import *
 from simulation_entity import *
-from chapter2_1 import *
+from MDP import *
 import threading
 
 class World:
@@ -16,7 +16,7 @@ class World:
         input("press any key")
 
         self.step = 0
-        self.pacman_action_list = ["straight", "left", "right"]
+        self.pacman_action_list = [0, 1, 2]
 
 
     def main(self):
@@ -26,6 +26,8 @@ class World:
         self.cv.set_target(self.pacman.goal_position())
 
         self.MDP = MDP(self.cv)
+        value_function = self.MDP.policy_evaluation(100)
+        self.policy = self.MDP.policy_improvement(value_function)
         self.thread.daemon = True
         self.thread.start()
         # self.cv.canvas.bind_all("<Key>", self.iter_step)
@@ -42,15 +44,17 @@ class World:
             self.step += 1
             print("step: ", self.step)
             # pacman_direction = random.choice(pacman_action_list)
-            pacman_direction = np.random.choice(self.pacman_action_list, 1, p=[0.8,0.1,0.1])
-            if pacman_direction == "straight":
-                if self.pacman.straight(self.cv.wall_lines(), self.cv.agent_coordinate()) == 1:
+            # pacman_direction = np.random.choice(self.pacman_action_list, 1, p=[0.8,0.1,0.1])
+            tmp = 4 * ((self.pacman.n * self.pacman.position[0]) + self.pacman.position[1]) + self.pacman.cardinal_point
+            pacman_direction = np.random.choice(self.pacman_action_list, 1, p=self.policy[tmp])
+            if pacman_direction == 0:
+                if self.pacman.straight() == 1:
                     self.window.destroy()
                 self.pacman.visualization()
-            elif pacman_direction == "left":
+            elif pacman_direction == 1:
                 self.pacman.left()
                 self.pacman.visualization()
-            elif pacman_direction == "right":
+            elif pacman_direction == 2:
                 self.pacman.right()
                 self.pacman.visualization()
             self.cv.set_agent(self.pacman, self.pacman.cardinal_point)
