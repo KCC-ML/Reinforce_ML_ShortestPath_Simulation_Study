@@ -17,6 +17,7 @@ class World:
 
         self.step = 0
         self.pacman_action_list = ["straight", "left", "right"]
+        self.pacman_cardinal_points = ["north", "east", "south", "west"]
 
     def main(self):
         self.window = WindowTkinter().create_window()
@@ -25,7 +26,7 @@ class World:
         self.cv.set_target(self.pacman.goal_position())
 
         self.mdp = MDP(self.cv.grid_dim, self.cv.walls, self.pacman.gridmap_goal)
-        self.mdp.policy_iteration()
+        self.greedy_policy_matrix = self.mdp.policy_iteration()
 
         self.thread.daemon = True
         self.thread.start()
@@ -43,7 +44,8 @@ class World:
             self.step += 1
             print("step: ", self.step)
             # pacman_direction = random.choice(pacman_action_list)
-            pacman_direction = np.random.choice(self.pacman_action_list, 1, p=[0.8,0.1,0.1])
+            pacman_cardinal_point = self.pacman_cardinal_points.index(self.pacman.cardinal_point)
+            pacman_direction = np.random.choice(self.pacman_action_list, 1, p=self.greedy_policy_matrix[self.pacman.position[0] * (4 * 5) + self.pacman.position[1] * 4 + pacman_cardinal_point])
             if pacman_direction == "straight":
                 if self.pacman.straight(self.cv.wall_lines(), self.cv.agent_coordinate()) == 1:
                     self.window.destroy()
