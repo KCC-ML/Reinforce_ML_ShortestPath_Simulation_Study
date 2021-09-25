@@ -1,17 +1,20 @@
 import numpy as np
+import copy
 
 class MDP:
-    def __init__(self, walls):
+    def __init__(self, grid_dim, walls, gridmap_goal):
         # 불변값 : 사용자 지정값, 환경값 정의
-        self.state_num = 100
-        self.grid_dim = 5
+        self.state_num = grid_dim**2 * 4
+        print(self.state_num)
+        self.grid_dim = grid_dim
         self.actions = [0, 1, 2]
         self.start_policy = [1.0, 0.8, 0.8]
-        self.target_position = [3, 2]
+        self.target_position = gridmap_goal
+        print(type(self.target_position))
         self.walls = walls
         self.reward = -1
         self.gamma = 0.1
-        self.theta = 0.001
+        self.theta = 0.00001
         self.initialize_elements()
 
     def initialize_elements(self):
@@ -46,44 +49,53 @@ class MDP:
 
     def policy_evaluation(self):
         episode = 0
-        delta_qvalue = 0
-        while delta_qvalue < self.theta:
+        old_delta_qvalue = 0
+        while True:
             delta_qvalue = 0
             step = 0
             for now_index in range(self.state_num):
                 state_present = self.transform_state_index(now_index)
-                if state_present[0:2] == self.target_position:
+                if state_present[0:2] == list(self.target_position):
                     qvalue_present = 0
                 else:
                     qvalue_past = self.value_matrix[now_index]
                     qvalue_present = self.qvalue_update(now_index, state_present)
+                    # print('qvalue_past : {}\n'.format(qvalue_past))
+                    # print('qvalue_present : {}\n'.format(qvalue_present))
                 delta_qvalue = max(delta_qvalue, abs(qvalue_past - qvalue_present))
+                print(abs(qvalue_past - qvalue_present))
                 self.value_matrix[now_index] = qvalue_present
-                # print('value_matrix : {}\n'.format(self.value_matrix.reshape((-1,4))))
+                print('value_matrix : {}\n'.format(self.value_matrix.reshape((-1,4))))
                 # print('delta_qvalue : {}\n'.format(delta_qvalue))
                 step += 1
-            print('step : {}\n'.format(step))
             episode += 1
+            print('step : {}\n'.format(step))
             print('delta_qvalue : {}\n'.format(delta_qvalue))
+            if delta_qvalue < self.theta:#delta_qvalue - old_delta_qvalue < self.theta:
+                break
+            old_delta_qvalue = delta_qvalue
         print('episode : {}\n'.format(episode))
         self.greedy_qvalue_matrix = self.value_matrix
 
     def policy_improvement(self):
         for now_index in range(self.state_num):
             state_present = self.transform_state_index(now_index)
-            if state_present[0:2] != self.target_position:
-                old_action = self.policy_matrix[now_index]
+            if state_present[0:2] != list(self.target_position):
+                old_policy_matrix = self.policy_matrix
                 self.policy_greedy_update(now_index, state_present)
                 # print('policy_matrix : {}\n'.format(self.policy_matrix))
-                if np.array_equal(old_action, self.policy_matrix[now_index]):
+                if np.array_equal(old_policy_matrix, self.policy_matrix):
                     self.policy_stable = True
                     self.greedy_policy_matrix = self.policy_matrix
+
 
     def qvalue_update(self, now_index, state_present):
         sum = 0
         for action in self.actions:
             next_index = self.next_state(state_present, action)
-            sum += self.policy_matrix[now_index][action] * (self.rewards[next_index] + self.gamma * self.value_matrix[next_index])
+            self.value_func = self.policy_matrix[now_index][action] * (self.rewards[next_index] + self.gamma * self.value_matrix[next_index])
+            sum += self.value_func
+        print(sum)
         qvalue_present = sum
         return qvalue_present
 
@@ -103,7 +115,7 @@ class MDP:
         return [row, col, direction]
 
     def next_state(self, state_present, action):
-        state_next = state_present
+        state_next = copy.deepcopy(state_present)
         if action == 0:
             if self.walls[state_present[2]][state_present[0]][state_present[1]] == 1:
                 pass

@@ -59,7 +59,7 @@ class CanvasGrid:
                 end_y = start_y - self.line_len
             self.canvas.create_line(start_x, start_y, end_x, end_y, fill='white')
 
-        wall_index = np.where(self.walls==1)
+        wall_index = np.where(self.walls == 1)
         for idx, _ in enumerate(wall_index[0]):
             if wall_index[0][idx] == 0:
                 start_x = 20 + wall_index[2][idx] * self.line_len
@@ -89,34 +89,47 @@ class CanvasGrid:
         self.walls = np.zeros((4, self.grid_dim, self.grid_dim))
         # change outer walls value as one
         self.walls[0, 0, :] = 1 # upper walls
-        self.walls[1, : , self.grid_dim-1] = 1 # right walls
+        self.walls[1, :, self.grid_dim-1] = 1 # right walls
         self.walls[2, self.grid_dim-1, :] = 1 # lower walls
         self.walls[3, :, 0] = 1 # left walls
 
-        ratio = 0.1
-        tot_wall_num = 2 * self.grid_dim * (self.grid_dim - 1)
-        cnt = 0
-        while cnt < int(tot_wall_num * ratio):
-            rand_num = random.randint(0, tot_wall_num-1)
-            wall_direction = (rand_num // self.grid_dim**2)
-            wall_row = ((rand_num % self.grid_dim**2) // self.grid_dim) - 1
-            wall_col = ((rand_num % self.grid_dim**2) % self.grid_dim) - 1
+        # model-based
+        wall_row = 3
+        self.walls[0, wall_row, 0] = 1
+        self.walls[2, wall_row, 1] = 1
+        self.walls[3, wall_row, 2] = 1
+        self.walls[0, wall_row, 2] = 1
 
-            if self.walls[wall_direction, wall_row, wall_col] == 1:
-                continue
-            elif self.walls[:, wall_row, wall_col].sum() == 3:
-                continue
+        self.walls[2, wall_row - 1, 0] = 1
+        self.walls[0, wall_row + 1, 1] = 1
+        self.walls[1, wall_row, 1] = 1
+        self.walls[2, wall_row - 1, 2] = 1
 
-            self.walls[wall_direction, wall_row, wall_col] = 1 # if zero there is no wall, if one there is a wall.
-            if wall_direction == 0:
-                self.walls[2, wall_row-1, wall_col] = 1
-            elif wall_direction == 1:
-                self.walls[3, wall_row, wall_col+1] = 1
-            elif wall_direction == 2:
-                self.walls[0, wall_row+1, wall_col] = 1
-            elif wall_direction == 3:
-                self.walls[1, wall_row, wall_col-1] = 1
-            cnt += 1
+        # model-free
+        # ratio = 0.1
+        # tot_wall_num = 2 * self.grid_dim * (self.grid_dim - 1)
+        # cnt = 0
+        # while cnt < int(tot_wall_num * ratio):
+        #     rand_num = random.randint(0, tot_wall_num-1)
+        #     wall_direction = (rand_num // self.grid_dim**2)
+        #     wall_row = ((rand_num % self.grid_dim**2) // self.grid_dim) - 1
+        #     wall_col = ((rand_num % self.grid_dim**2) % self.grid_dim) - 1
+        #
+        #     if self.walls[wall_direction, wall_row, wall_col] == 1:
+        #         continue
+        #     elif self.walls[:, wall_row, wall_col].sum() == 3:
+        #         continue
+        #
+        #     self.walls[wall_direction, wall_row, wall_col] = 1 # if zero there is no wall, if one there is a wall.
+        #     if wall_direction == 0:
+        #         self.walls[2, wall_row-1, wall_col] = 1
+        #     elif wall_direction == 1:
+        #         self.walls[3, wall_row, wall_col+1] = 1
+        #     elif wall_direction == 2:
+        #         self.walls[0, wall_row+1, wall_col] = 1
+        #     elif wall_direction == 3:
+        #         self.walls[1, wall_row, wall_col-1] = 1
+        #     cnt += 1
 
     def wall_lines(self):
         return self.walls

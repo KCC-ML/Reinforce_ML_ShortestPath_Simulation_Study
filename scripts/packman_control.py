@@ -1,14 +1,11 @@
 import time
-from scripts.packman_entity import *
-from scripts.simulation_entity import *
+from packman_entity import *
+from simulation_entity import *
+from MDP import *
 import threading
 
 class World:
-    def __init__(self):
-        n = int(input("Input grid size N:"))
-        if n == 1:
-            raise ValueError
-
+    def __init__(self, n):
         # self.env = Env(n)
         self.pacman = Pacman(n)
         gridmap = self.pacman.gridmap
@@ -26,6 +23,9 @@ class World:
         self.cv = CanvasGrid(self.window, self.pacman)
         self.cv.set_agent(self.pacman, self.pacman.cardinal_point)
         self.cv.set_target(self.pacman.goal_position())
+
+        self.mdp = MDP(self.cv.grid_dim, self.cv.walls, self.pacman.gridmap_goal)
+        self.mdp.policy_iteration()
 
         self.thread.daemon = True
         self.thread.start()
@@ -59,7 +59,4 @@ class World:
 
 
 if __name__ == '__main__':
-    try:
-        World().main()
-    except ValueError:
-        print("grid size N > 1")
+        World(5).main()
