@@ -25,7 +25,7 @@ class World:
         self.cv.set_agent(self.pacman, self.pacman.cardinal_point)
         self.cv.set_target(self.pacman.goal_position())
 
-        self.mdp = MDP(self.cv.grid_dim, self.cv.walls, self.pacman.gridmap_goal)
+        self.mdp = MDP(self.cv.grid_dim, self.cv.walls, self.pacman.gridmap_goal, self.pacman_action_list)
         self.greedy_policy_matrix = self.mdp.policy_iteration()
 
         self.thread.daemon = True
@@ -58,7 +58,6 @@ class World:
                 self.pacman.visualization()
             self.cv.set_agent(self.pacman, self.pacman.cardinal_point)
             time.sleep(1)
-
 
 if __name__ == '__main__':
         World(5).main()

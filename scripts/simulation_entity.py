@@ -105,6 +105,21 @@ class CanvasGrid:
         self.walls[1, wall_row, 1] = 1
         self.walls[2, wall_row - 1, 2] = 1
 
+        # test
+        # wall_row = 2
+        # self.walls[1, wall_row, 2] = 1
+        # self.walls[3, wall_row, 3] = 1
+        # self.walls[0, wall_row, 3] = 1
+        # self.walls[2, wall_row-1, 3] = 1
+        #
+        # wall_row = 1
+        # self.walls[1, wall_row, 3] = 1
+        # self.walls[3, wall_row, 4] = 1
+        #
+        # wall_row = 0
+        # self.walls[1, wall_row, 2] = 1
+        # self.walls[3, wall_row, 3] = 1
+
         # model-free
         # ratio = 0.1
         # tot_wall_num = 2 * self.grid_dim * (self.grid_dim - 1)

@@ -2,16 +2,19 @@ import numpy as np
 import copy
 
 class MDP:
-    def __init__(self, grid_dim, walls, gridmap_goal):
+    def __init__(self, grid_dim, walls, gridmap_goal, actions):
         # 불변값 : 사용자 지정값, 환경값 정의
         self.state_num = grid_dim**2 * 4
         self.grid_dim = grid_dim
-        self.actions = [0, 1, 2]
+        self.actions = self.translate_action_index(actions)
         self.start_policy = [0.8, 0.1, 0.1]
         self.target_position = gridmap_goal
         self.walls = walls
         self.reward = -1
-        self.gamma = 1
+        self.gamma = 0.1
+        self.theta = 0.01
+        self.initialize_elements()
+
         # gamma = 1 -> value_function : 음의 방향으로 발산 -> policy evaluation 중단 기준 : episode 수
             # episode 수가 크면 iteration이 적게 필요하고
             # episode 수가 작으면 iteration이 많이 필요
@@ -20,8 +23,17 @@ class MDP:
             # theta가 클수록 필요한 episode 수는 작아지지만 iteration 수는 커짐
             # theta가 작을수록 필요한 episode 수는 커지지만 iteration 수는 작아짐
             # theta가 충분히 큰 수 일때는 episode, iteration 수가 일정해짐
-        self.theta = 0.01
-        self.initialize_elements()
+        # target reward가 클수록 gamma를 작게 해줘야 함
+            # gamma를 고정하고 target reward를 크게 하면 일정 크기에서 iteration이 끝나지 않음
+        # iteration 최소값(최신) : 3
+            # episode 수 고정 했을 때 보인 값
+            # episode 수 고정 안했을 때 iteration 최소값(최신) : 9
+
+    def translate_action_index(self, actions):
+        pacman_action_index = []
+        for i, action in enumerate(actions):
+            pacman_action_index.append(i)
+        return pacman_action_index
 
     def initialize_elements(self):
         self.matrixization_value()
@@ -39,8 +51,7 @@ class MDP:
     def matrixization_reward(self):
         self.rewards = self.reward * np.ones((self.state_num, 1))
         temp = 4 * 5 * self.target_position[0] + 4 * self.target_position[1]
-        self.rewards[temp : temp + 4] = 0
-        # target reward 바꾸면 이상함
+        self.rewards[temp : temp + 4] = 5
 
     def policy_iteration(self):
         iteration = 0
@@ -77,14 +88,14 @@ class MDP:
                 delta_qvalue = max(delta_qvalue, abs(qvalue_past - qvalue_present))
                 # print(abs(qvalue_past - qvalue_present))
                 self.value_matrix[now_index] = qvalue_present
-                print('value_matrix : \n{}\n'.format(self.value_matrix.reshape((-1,4))))
+                #print('value_matrix : \n{}\n'.format(self.value_matrix.reshape((-1,4))))
                 # print('delta_qvalue : {}\n'.format(delta_qvalue))
                 step += 1
-                print('step : {}\n'.format(step))
+                #print('step : {}\n'.format(step))
             episode += 1
             self.all_step += step
             print('episode : {}\n'.format(episode))
-            if episode == 10: #delta_qvalue < self.theta:
+            if delta_qvalue < self.theta: #episode == 10:
                 self.all_episode += episode
                 break
         self.greedy_qvalue_matrix = self.value_matrix
@@ -94,10 +105,10 @@ class MDP:
         for now_index in range(self.state_num):
             state_present = self.transform_state_index(now_index)
             if state_present[0:2] != list(self.target_position):
-                old_greedy_action = copy.deepcopy([i for i in range(len(self.policy_matrix[now_index])) if self.policy_matrix[now_index][i] == max(self.policy_matrix[now_index])])
+                old_policy_matrix = copy.deepcopy(self.policy_matrix)
                 greedy_action = self.policy_greedy_update(now_index, state_present)
-                print('policy_matrix : \n{}\n'.format(self.policy_matrix))
-                if not old_greedy_action == greedy_action:
+                #print('policy_matrix : \n{}\n'.format(self.policy_matrix))
+                if not np.array_equal(old_policy_matrix, self.policy_matrix):
                     self.policy_stable = False
         if self.policy_stable:
             self.greedy_policy_matrix = self.policy_matrix
