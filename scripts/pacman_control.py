@@ -1,5 +1,5 @@
 import time
-from packman_entity import *
+from pacman_entity import *
 from simulation_entity import *
 from MDP import *
 import threading
@@ -25,7 +25,7 @@ class World:
         self.cv.set_agent(self.pacman, self.pacman.cardinal_point)
         self.cv.set_target(self.pacman.goal_position())
 
-        self.mdp = MDP(self.cv.grid_dim, self.cv.walls, self.pacman.gridmap_goal, self.pacman_action_list)
+        self.mdp = MDP(self.cv.walls, self.pacman.gridmap_goal, self.pacman_action_list)
         self.greedy_policy_matrix = self.mdp.policy_iteration()
 
         self.thread.daemon = True

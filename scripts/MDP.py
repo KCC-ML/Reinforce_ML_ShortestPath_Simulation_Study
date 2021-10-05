@@ -2,17 +2,18 @@ import numpy as np
 import copy
 
 class MDP:
-    def __init__(self, grid_dim, walls, gridmap_goal, actions):
+    def __init__(self, env, gridmap_goal, actions):
         # 불변값 : 사용자 지정값, 환경값 정의
-        self.state_num = grid_dim**2 * 4
-        self.grid_dim = grid_dim
+        self.grid_dim = env.shape[1]
+        self.agent_direction_count = env.shape[0]
+        self.state_num = self.grid_dim**2 * self.agent_direction_count
         self.actions = self.translate_action_index(actions)
         self.start_policy = [0.8, 0.1, 0.1]
         self.target_position = gridmap_goal
-        self.walls = walls
+        self.walls = env
         self.reward = -1
         self.gamma = 0.1
-        self.theta = 0.01
+        self.theta = 0.00001
         self.initialize_elements()
 
         # gamma = 1 -> value_function : 음의 방향으로 발산 -> policy evaluation 중단 기준 : episode 수
@@ -45,13 +46,13 @@ class MDP:
 
     def matrixization_policy(self):
         self.policy_matrix = np.reshape(self.start_policy * self.state_num, (self.state_num, len(self.start_policy)))
-        temp = 4 * 5 * self.target_position[0] + 4 * self.target_position[1]
-        self.policy_matrix[temp : temp + 4, :] = 10
+        temp = self.agent_direction_count * self.grid_dim * self.target_position[0] + self.agent_direction_count * self.target_position[1]
+        self.policy_matrix[temp : temp + self.agent_direction_count, :] = 10
 
     def matrixization_reward(self):
         self.rewards = self.reward * np.ones((self.state_num, 1))
-        temp = 4 * 5 * self.target_position[0] + 4 * self.target_position[1]
-        self.rewards[temp : temp + 4] = 5
+        temp = self.agent_direction_count * self.grid_dim * self.target_position[0] + self.agent_direction_count * self.target_position[1]
+        self.rewards[temp : temp + self.agent_direction_count] = 0
 
     def policy_iteration(self):
         iteration = 0
@@ -67,7 +68,7 @@ class MDP:
         print('all_episode : {}\n'.format(self.all_episode))
         print('iteration : {}\n'.format(iteration))
         print('greedy_policy_matrix : \n{}\n'.format(self.greedy_policy_matrix))
-        print('greedy_qvalue_matrix : \n{}\n'.format(self.greedy_qvalue_matrix.reshape((-1,4))))
+        print('greedy_qvalue_matrix : \n{}\n'.format(self.greedy_qvalue_matrix.reshape((-1,self.agent_direction_count))))
         return self.greedy_policy_matrix
 
     def policy_evaluation(self):
@@ -77,28 +78,24 @@ class MDP:
             step = 0
             for now_index in range(self.state_num):
                 state_present = self.transform_state_index(now_index)
-                if state_present[0:2] == list(self.target_position):
-                    qvalue_past = 0
-                    qvalue_present = 0
-                else:
-                    qvalue_past = self.value_matrix[now_index]
-                    qvalue_present = self.qvalue_update(now_index, state_present)
-                    # print('qvalue_past : {}\n'.format(qvalue_past))
-                    # print('qvalue_present : {}\n'.format(qvalue_present))
-                delta_qvalue = max(delta_qvalue, abs(qvalue_past - qvalue_present))
-                # print(abs(qvalue_past - qvalue_present))
-                self.value_matrix[now_index] = qvalue_present
-                #print('value_matrix : \n{}\n'.format(self.value_matrix.reshape((-1,4))))
-                # print('delta_qvalue : {}\n'.format(delta_qvalue))
+                if state_present[0:2] != list(self.target_position):
+                    qvalue_past_matrix = copy.deepcopy(self.value_matrix)
+                    self.qvalue_update(now_index, state_present)
+                delta_qvalue = max(delta_qvalue, sum(abs(qvalue_past_matrix - self.value_matrix))[0])
                 step += 1
-                #print('step : {}\n'.format(step))
             episode += 1
             self.all_step += step
-            print('episode : {}\n'.format(episode))
-            if delta_qvalue < self.theta: #episode == 10:
+            if delta_qvalue < self.theta: #episode == 1:
                 self.all_episode += episode
                 break
-        self.greedy_qvalue_matrix = self.value_matrix
+        self.greedy_qvalue_matrix = copy.deepcopy(self.value_matrix)
+
+        # print('value_matrix : \n{}\n'.format(self.value_matrix.reshape((-1,self.agent_direction_count))))
+        # print('delta_qvalue : {}\n'.format(delta_qvalue))
+        # print('step : {}\n'.format(step))
+        # print(qvalue_past_matrix - self.value_matrix)
+        # print(abs(qvalue_past_matrix - self.value_matrix))
+        # print(sum(abs(qvalue_past_matrix - self.value_matrix)))
 
     def policy_improvement(self):
         self.policy_stable = True
@@ -106,7 +103,7 @@ class MDP:
             state_present = self.transform_state_index(now_index)
             if state_present[0:2] != list(self.target_position):
                 old_policy_matrix = copy.deepcopy(self.policy_matrix)
-                greedy_action = self.policy_greedy_update(now_index, state_present)
+                self.policy_greedy_update(now_index, state_present)
                 #print('policy_matrix : \n{}\n'.format(self.policy_matrix))
                 if not np.array_equal(old_policy_matrix, self.policy_matrix):
                     self.policy_stable = False
@@ -121,7 +118,7 @@ class MDP:
             self.value_func = self.policy_matrix[now_index][action] * (self.rewards[next_index] + self.gamma * self.value_matrix[next_index])
             sum += self.value_func
         qvalue_present = sum
-        return qvalue_present
+        self.value_matrix[now_index] = qvalue_present
 
     def policy_greedy_update(self, now_index, state_present):
         next_values = []
@@ -131,12 +128,11 @@ class MDP:
         greedy_action = [i for i in range(len(next_values)) if next_values[i] == max(next_values)]
         self.policy_matrix[now_index, :] = 0
         self.policy_matrix[now_index, greedy_action] = 1 / len(greedy_action)
-        return greedy_action
 
     def transform_state_index(self, state_index):
-        row = state_index // (4 * 5)
-        col = state_index % (4 * 5) // 4
-        direction = state_index % (4 * 5) % 4
+        row = state_index // (self.agent_direction_count * self.grid_dim)
+        col = state_index % (self.agent_direction_count * self.grid_dim) // self.agent_direction_count
+        direction = state_index % (self.agent_direction_count * self.grid_dim) % self.agent_direction_count
         return [row, col, direction]
 
     def next_state(self, state_present, action):
@@ -154,9 +150,9 @@ class MDP:
                 elif state_present[2] == 3:
                     state_next[1] -= 1
         elif action == 1:
-            state_next[2] = (state_next[2] - 1) % 4
+            state_next[2] = (state_next[2] - 1) % self.agent_direction_count
         elif action == 2:
-            state_next[2] = (state_next[2] + 1) % 4
+            state_next[2] = (state_next[2] + 1) % self.agent_direction_count
 
-        next_index = state_next[0] * (4 * 5) + state_next[1] * 4 + state_next[2]
+        next_index = state_next[0] * (self.agent_direction_count * self.grid_dim) + state_next[1] * self.agent_direction_count + state_next[2]
         return next_index
