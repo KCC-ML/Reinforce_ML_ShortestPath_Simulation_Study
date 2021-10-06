@@ -10,7 +10,11 @@ class MDP:
         self.reward = -1
         self.gamma = 0.9
         self.action = [0, 1, 2]
-        self.action_probability = [0.8, 0.1, 0.1]
+        self.theta = 0.00001
+        self.R = np.ones((self.State_no, 1)) * -1
+        self.initial_policy = [0.8, 0.1, 0.1]
+        self.initial_P = np.zeros((self.State_no, self.State_no))
+        self.initial_V = np.zeros((self.State_no, 1))
 
     # https://www.youtube.com/watch?v=3vuw23_l_oA&list=PLKs7xpqpX1beJ5-EOFDXTVckBQFFyTxUH&index=6 28:29
     # 위 링크 강의 영상에서 아래식을 가지고 코딩
@@ -18,22 +22,21 @@ class MDP:
 
     # P파이 를 구하기 위한 메소드(P = 100x100의 s -> s'를 표현한 행렬)
     # policy_improvement 가 끝난 후에 다시 구해줘야 함
-    def state_transition_matrix(self):
-        P = np.zeros((self.State_no, self.State_no))
-        for i in range(self.State_no)
-            P[i]
+    def state_transition_matrix(self, post_P, improved_policy):
+        P = post_P
+        for i in range(self.State_no):
             direction = i % 4
             row = (i // 4) // self.grid_dim
             col = (i // 4) % self.grid_dim
 
             if self.walls[direction, row, col] == 1:
-                P[i, i - direction + ((direction - 1) % 4)] = self.action_probability[1]
-                P[i, i - direction + ((direction + 1) % 4)] = self.action_probability[2]
-                P[i, i] = self.action_probability[0]
+                P[i, i - direction + ((direction - 1) % 4)] = improved_policy[1]
+                P[i, i - direction + ((direction + 1) % 4)] = improved_policy[2]
+                P[i, i] = improved_policy[0]
 
             elif self.walls[direction, row, col] == 0:
-                P[i, i - direction + ((direction - 1) % 4)] = self.action_probability[1]
-                P[i, i - direction + ((direction + 1) % 4)] = self.action_probability[2]
+                P[i, i - direction + ((direction - 1) % 4)] = improved_policy[1]
+                P[i, i - direction + ((direction + 1) % 4)] = improved_policy[2]
                 if direction % 4 == 0:
                     tmp = -4 * self.grid_dim
                 elif direction % 4 == 1:
@@ -42,30 +45,43 @@ class MDP:
                     tmp = 4 * self.grid_dim
                 elif direction % 4 == 3:
                     tmp = -4 * 1
-                P[i, i + tmp] = self.action_probability[0]
+                P[i, i + tmp] = improved_policy[0]
 
         if not np.all((P.sum(axis=1)) == 1):
             print("check transition probability matrix!!")
-
         # print("transition probability matrix: \n", P)
         self.P = P
+
+        return P
 
     # vk(=v_post)를 구하기 위한 메소드(vk는 각 v(s)를 100x1의 벡터로 표현한 행렬)
     # vk+1(=v_next)을 구하기 위한 메소드(vk에 P를 곱하고, 감마를 곱하고
     # , R파이(R파이(=R) 는 R(=-1)을 100x1의 벡터로 표현한 행렬)를 더한다)
-    def policy_evaluation(self):
-        V_present = np.zeros((self.State_no, 1))
-        R = np.ones((self.State_no, 1)) * -1
-        V_next = R + self.gamma * self.P * V_present
-
-        self.V_present = V_present
-        self.V_next = V_next
+    def policy_evaluation(self, R, P, post_V):
+        V = R + self.gamma * P @ post_V
+        return V
 
     # 위에 구해진 vk+1로 agent 가 각 v(s)를 비교하여 가장 높은 v(s)를 택하는 action 을 취할 수 있도록 policy(0.8, 0.1, 0.1)를
     # improve 한다
-    def policy_improvement(self):
-        pass
+    def policy_improvement(self, next_V, policy):
+        for i in range(100):
+            next_V
 
     # 위 과정을 반복
     def policy_iteration(self):
-        pass
+        iteration = 1
+        next_P = self.state_transition_matrix(self.initial_P, self.initial_policy)
+        next_V = self.policy_evaluation(self.R, next_P, self.initial_V)
+        improved_policy = self.policy_improvement(next_V, self.initial_policy)
+        while True:
+            iteration += 1
+            post_V = next_V
+            next_P = self.state_transition_matrix(next_P, improved_policy)
+            next_V = self.policy_evaluation(self.R, next_P, next_V)
+            improved_policy = self.policy_improvement(next_V, improved_policy)
+
+            if self.theta > min(next_V - post_V):
+                optimal_policy = improved_policy
+                break
+
+        return optimal_policy
