@@ -9,7 +9,6 @@ class Env:
     def __init__(self, n):
         self.n = n
         self.percentage = 0.1
-        self.gridmap = 0
         self.gridmap_goal = np.zeros([0,0])
         self._grid()
         self.generate_wall()
@@ -27,11 +26,9 @@ class Env:
         self.gridmap_goal = np.array([3, 2])
 
         # model-free
-        # n = self.n
-        #
         # while True:
-        #     e_x = random.randrange(n)
-        #     e_y = random.randrange(n)
+        #     e_x = random.randrange(self.n)
+        #     e_y = random.randrange(self.n)
         #     if self.gridmap[e_y][e_x] == 0:
         #         self.gridmap[e_y][e_x] = 2
         #         self.gridmap_goal = np.array([e_y, e_x])
@@ -49,7 +46,8 @@ class Env:
         self.walls[2, self.n-1, :] = 1 # lower walls
         self.walls[3, :, 0] = 1 # left walls
 
-        # model-based
+
+        # # model-based
         wall_row = 3
         self.walls[0, wall_row, 0] = 1
         self.walls[2, wall_row, 1] = 1
@@ -78,13 +76,13 @@ class Env:
 
         # model-free
         # ratio = 0.1
-        # tot_wall_num = 2 * self.grid_dim * (self.grid_dim - 1)
+        # tot_wall_num = 2 * self.n * (self.n - 1)
         # cnt = 0
         # while cnt < int(tot_wall_num * ratio):
         #     rand_num = random.randint(0, tot_wall_num-1)
-        #     wall_direction = (rand_num // self.grid_dim**2)
-        #     wall_row = ((rand_num % self.grid_dim**2) // self.grid_dim) - 1
-        #     wall_col = ((rand_num % self.grid_dim**2) % self.grid_dim) - 1
+        #     wall_direction = (rand_num // self.n**2)
+        #     wall_row = ((rand_num % self.n**2) // self.n) - 1
+        #     wall_col = ((rand_num % self.n**2) % self.n) - 1
         #
         #     if self.walls[wall_direction, wall_row, wall_col] == 1:
         #         continue
@@ -111,6 +109,7 @@ class Pacman(Env):
         self.cardinal_point = 0
         self.position = np.array([0,0])
         self.set_packman()
+        self.goal_reward = 10
 
     # packman's movement
     def straight(self):
@@ -196,7 +195,7 @@ class Pacman(Env):
         # model-free
         # n = self.n
         # gridmap = self.gridmap
-        # cardinal_point_list = ["east", "west", "south", "north"]
+        # cardinal_point_list = [0,1,2,3] # ["east", "west", "south", "north"]
         #
         # while True:
         #     p_x = random.randrange(0, n)
@@ -224,3 +223,44 @@ class Pacman(Env):
         for tmp in gridmap:
             print(tmp)
 
+    def pacman_state(self):
+        state_num = 4 * ((self.n * self.position[0]) + self.position[1]) + self.cardinal_point
+
+        return state_num
+
+    def reset(self):
+        self.set_packman()
+        return self.pacman_state()
+
+    def step(self, state, action):
+        direction = state % 4
+        row = (state // 4) // self.n
+        col = (state // 4) % self.n
+
+        if action == 0:
+            if self.walls[direction, row, col] == 1:
+                tmp = 0
+            elif self.walls[direction, row, col] == 0:
+                if direction % 4 == 0:
+                    tmp = -4 * self.n
+                elif direction % 4 == 1:
+                    tmp = 4 * 1
+                elif direction % 4 == 2:
+                    tmp = 4 * self.n
+                elif direction % 4 == 3:
+                    tmp = -4 * 1
+        elif action == 1:
+            tmp = -direction + (direction - 1) % 4
+        elif action == 2:
+            tmp = -direction + (direction + 1) % 4
+
+        next_state = state + tmp
+        goal_state = 4 * ((self.n * self.gridmap_goal[0]) + self.gridmap_goal[1])
+        if goal_state <= next_state < goal_state + 4:
+            reward = self.goal_reward
+            done = True
+        else:
+            reward = -1
+            done = False
+
+        return next_state, reward, done

@@ -14,9 +14,9 @@ class WindowTkinter:
         return self.window
 
 class CanvasGrid:
-    def __init__(self, window, agent):
+    def __init__(self, window, pacman):
         self.window = window
-        self.pacman = agent
+        self.pacman = pacman
         self.grid_dim = self.pacman.n
         # self.window = Tk()
         self.run()
@@ -84,7 +84,7 @@ class CanvasGrid:
 
             self.canvas.create_line(start_x, start_y, end_x, end_y, fill='blue', width=5)
 
-    def set_agent(self, agent, cardinal_point):
+    def set_pacman(self, pacman, cardinal_point):
         if cardinal_point == 1:
             img = PIL.Image.open("../figures/pngegg2.png")
         elif cardinal_point == 3:
@@ -95,14 +95,14 @@ class CanvasGrid:
             img = PIL.Image.open("../figures/pngegg2.png").transpose(PIL.Image.ROTATE_90)
 
         resized_image = img.resize((self.line_len-10, self.line_len-10))
-        self.agent_image = PIL.ImageTk.PhotoImage(resized_image, master=self.window)
+        self.pacman_image = PIL.ImageTk.PhotoImage(resized_image, master=self.window)
 
-        self.agent_y = int(20 + self.line_len * agent.position[0] + self.line_len/2)
-        self.agent_x = int(20 + self.line_len * agent.position[1] + self.line_len/2)
-        self.canvas.create_image(self.agent_x, self.agent_y, anchor=CENTER, image=self.agent_image)
+        self.pacman_y = int(20 + self.line_len * pacman.position[0] + self.line_len/2)
+        self.pacman_x = int(20 + self.line_len * pacman.position[1] + self.line_len/2)
+        self.canvas.create_image(self.pacman_x, self.pacman_y, anchor=CENTER, image=self.pacman_image)
 
-    def agent_coordinate(self):
-        return [self.agent_x, self.agent_y]
+    def pacman_coordinate(self):
+        return [self.pacman_x, self.pacman_y]
 
     def set_target(self, target_position):
         img = PIL.Image.open("../figures/pngegg.png")
