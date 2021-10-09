@@ -46,9 +46,9 @@ class Pacman(Env):
         super().__init__(n)
         self.cardinal_point = "north"
         self.position = np.array([0,0])
-        self.set_packman()
+        self.set_pacman()
 
-    # packman's movement
+    # pacman's movement
     def straight(self, wall_lines, agent_coordinate):
         cardinal_point = self.cardinal_point
         p_y = self.position[0]
@@ -124,7 +124,7 @@ class Pacman(Env):
             self.cardinal_point = "east"
         return self.cardinal_point
 
-    def set_packman(self):
+    def set_pacman(self):
         self.gridmap[0][0] = -1
         self.position = np.array([0, 0])
         self.cardinal_point = "north"
