@@ -6,7 +6,6 @@ from scripts.pacman_entity import *
 
 class MC_prediction():
     def __init__(self, pacman, numEpisode):
-        self.epsilon = 0.1
         self.learning_rate = 0.01
         self.gamma = 0.9
         self.memory = []
@@ -18,26 +17,29 @@ class MC_prediction():
         self.numState = 4 * self.grid_dim ** 2
         self.value_table = np.zeros(self.numState)
         self.action_list = [0, 1, 2]  # ["straight", "left", "right"]
-        self.action_text = ['s', 'l', 'r']
 
         self.start_MC(self.numEpisode)
-        self.optimal_policy()
+        # self.optimal_policy()
 
     def get_action(self, state):
-        if np.random.randn() < self.epsilon:
-            idx = np.random.choice(len(self.action_list), 1)[0]
-        else:
-            next_values = np.array([])
-            for s in self.next_states(state):
-                next_values = np.append(next_values, self.value_table[s])
-            max_value = np.amax(next_values)
-            tie_Qchecker = np.where(next_values == max_value)[0]
-
-            if len(tie_Qchecker) > 1:
-                idx = np.random.choice(tie_Qchecker, 1)[0]
-            else:
-                idx = np.argmax(next_values)
+        # if np.random.randn() < self.epsilon:
+        #     idx = np.random.choice(len(self.action_list), 1)[0]
+        # else:
+        #     next_values = np.array([])
+        #     for s in self.next_states(state):
+        #         next_values = np.append(next_values, self.value_table[s])
+        #     max_value = np.amax(next_values)
+        #     tie_Qchecker = np.where(next_values == max_value)[0]
+        #
+        #     if len(tie_Qchecker) > 1:
+        #         idx = np.random.choice(tie_Qchecker, 1)[0]
+        #     else:
+        #         idx = np.argmax(next_values)
+        #
+        # action = self.action_list[idx]
+        idx = np.random.choice(len(self.action_list), 1, p=[0.8, 0.1, 0.1])[0]
         action = self.action_list[idx]
+
         return action
 
     def next_states(self, state):
@@ -70,24 +72,41 @@ class MC_prediction():
 
         return next_states
 
-    # first_visit MC
     def update(self):
+        method = 'last_visit' # ['first_visit', 'every_visit', 'last_visit']
         G_t = 0
-        visit_states = []
 
         goal_state = 4 * ((self.pacman.n * self.pacman.gridmap_goal[0]) + self.pacman.gridmap_goal[1])
         for i in range(4):
-            goal_state += i
-            self.value_table[goal_state] = self.pacman.goal_reward
+            self.value_table[goal_state+i] = self.pacman.goal_reward
 
-        for sample in reversed(self.memory):
-            state = sample[0]
-            reward = sample[1]
-            G_t = reward + self.gamma * G_t
-            V_t = self.value_table[state]
-            if state not in visit_states:
-                visit_states.append(state)
+        if method == 'first_visit':
+            V_t_old = self.value_table
+            V_t_new = self.value_table
+            for sample in reversed(self.memory):
+                state = sample[0]
+                reward = sample[1]
+                G_t = reward + self.gamma * G_t
+                V_t_new[state] = V_t_old[state] + self.learning_rate * (G_t - V_t_old[state])
+            self.value_table = V_t_new
+        elif method == 'every_visit':
+            for sample in reversed(self.memory):
+                state = sample[0]
+                reward = sample[1]
+                G_t = reward + self.gamma * G_t
+                V_t = self.value_table[state]
                 self.value_table[state] = V_t + self.learning_rate * (G_t - V_t)
+        elif method == 'last_visit':
+            visit_states = []
+
+            for sample in reversed(self.memory):
+                state = sample[0]
+                reward = sample[1]
+                G_t = reward + self.gamma * G_t
+                V_t = self.value_table[state]
+                if state not in visit_states:
+                    visit_states.append(state)
+                    self.value_table[state] = V_t + self.learning_rate * (G_t - V_t)
 
     def memorizer(self, state, reward, done):
         self.memory.append([state, reward, done])
@@ -108,7 +127,6 @@ class MC_prediction():
 
                 total_reward += reward
                 self.memorizer(state, reward, done)
-                self.save_actionseq(action_sequence, action)
 
                 state = next_state
 
@@ -147,6 +165,6 @@ class MC_prediction():
 
 if __name__ == "__main__":
     pacman = Pacman(5)
-    MonteCarlo_policy = MC_prediction(pacman, 1000)
-    print(MonteCarlo_policy.optimal_policy())
-    print(MonteCarlo_policy.value_table.reshape(-1, 4))
+    MonteCarlo_prediction = MC_prediction(pacman, 1000)
+    # print(MonteCarlo_policy.optimal_policy())
+    print(MonteCarlo_prediction.value_table.reshape(-1, 4))

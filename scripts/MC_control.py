@@ -13,9 +13,8 @@ class MC_control():
         self.pacman = pacman
         self.grid_dim = pacman.n
         self.numState = 4 * self.grid_dim ** 2
-        self.value_table = np.zeros(self.numState)
         self.action_list = [0, 1, 2]  # ["straight", "left", "right"]
-        self.action_text = ['s', 'l', 'r']
+        self.q_table = np.zeros(self.numState, len(self.action_list))
 
         self.policy_evaluation(self.numEpisode)
         self.policy_improvement()
@@ -68,7 +67,6 @@ class MC_control():
 
         return next_states
 
-    # first_visit MC
     def update(self):
         G_t = 0
         visit_states = []

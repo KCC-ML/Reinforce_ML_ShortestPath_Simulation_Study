@@ -1,13 +1,12 @@
 import numpy as np
 
+
 class MDP():
     def __init__(self, canvas_grid):
         self.grid_dim = canvas_grid.grid_dim
         self.numState = 4 * self.grid_dim ** 2
         self.agent = canvas_grid.pacman
         self.walls = self.agent.wall_lines()
-        # canvas_grid.pacman.position
-        # canvas_grid.pacman.cardinal_point
         self.transitionProabilityMatrix()
         self.reward = -1
         self.gamma = 1

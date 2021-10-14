@@ -20,7 +20,6 @@ class World:
         self.step = 0
         self.pacman_action_list = [0, 1, 2]
 
-
     def main(self):
         self.window = WindowTkinter().create_window()
         self.cv = CanvasGrid(self.window, self.pacman)
@@ -32,7 +31,10 @@ class World:
             value_function = self.MDP.policy_evaluation(100)
             self.policy = self.MDP.policy_improvement(value_function)
         elif self.algorithm == 'MCP':
-            self.policy = MC_prediction(self.pacman, 1000).optimal_policy()
+            # In MC_prediction script, 10000 episodes needed when gamma=1.0
+            MonteCarlo_prediction = MC_prediction(self.pacman, 1000)
+            print(MonteCarlo_prediction.value_table.reshape(-1, 4))
+            self.policy = MonteCarlo_prediction.optimal_policy()
 
         self.thread.daemon = True
         self.thread.start()
