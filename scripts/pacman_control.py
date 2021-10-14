@@ -4,6 +4,7 @@ from scripts.simulation_entity import *
 from scripts.MDP import *
 import threading
 from scripts.MC_prediction import *
+from scripts.TDzero_prediction import *
 
 class World:
     def __init__(self, n):
@@ -15,7 +16,7 @@ class World:
         self.thread = threading.Thread(target=self.iter_step)
         print("-------------------------------")
         # input("press any key")
-        self.algorithm = 'MCP' # ['random', 'MDP', 'MCP']
+        self.algorithm = 'TDz' # ['random', 'MDP', 'MCP', 'TDz']
 
         self.step = 0
         self.pacman_action_list = [0, 1, 2]
@@ -35,6 +36,10 @@ class World:
             MonteCarlo_prediction = MC_prediction(self.pacman, 1000)
             print(MonteCarlo_prediction.value_table.reshape(-1, 4))
             self.policy = MonteCarlo_prediction.optimal_policy()
+        elif self.algorithm == 'TDz':
+            TemporalDifferenceZero_prediction = TDzero_prediction(self.pacman, 1000)
+            print(TemporalDifferenceZero_prediction.value_table.reshape(-1, 4))
+            self.policy = TemporalDifferenceZero_prediction.optimal_policy()
 
         self.thread.daemon = True
         self.thread.start()
@@ -59,6 +64,9 @@ class World:
                     1]) + self.pacman.cardinal_point
                 pacman_direction = np.random.choice(self.pacman_action_list, 1, p=self.policy[tmp])
             elif self.algorithm == 'MCP':
+                tmp = 4 * ((self.pacman.n * self.pacman.position[0]) + self.pacman.position[1]) + self.pacman.cardinal_point
+                pacman_direction = self.policy[tmp]
+            elif self.algorithm == 'TDz':
                 tmp = 4 * ((self.pacman.n * self.pacman.position[0]) + self.pacman.position[
                     1]) + self.pacman.cardinal_point
                 pacman_direction = self.policy[tmp]
