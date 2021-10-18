@@ -1,17 +1,18 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib import animation
+from collections import deque
 from scripts.pacman_entity import *
 
 
-class TDzero_prediction():
-    def __init__(self, pacman, numEpisode):
+class TDn_prediction():
+    def __init__(self, pacman, numEpisode, n):
         self.learning_rate = 0.01
         self.gamma = 0.9
         self.alpha = 0.1
-        self.memory = []
         self.numEpisode = numEpisode
-        self.totReward = np.array([])
+        self.n_step = n
+        self.que = deque([], maxlen=self.n_step)
 
         self.pacman = pacman
         self.grid_dim = pacman.n
@@ -19,7 +20,7 @@ class TDzero_prediction():
         self.value_table = np.zeros(self.numState)
         self.action_list = [0, 1, 2]  # ["straight", "left", "right"]
 
-        self.start_TDzero(self.numEpisode)
+        self.start_TDn()
         # self.optimal_policy()
 
     def get_action(self, state):
@@ -73,13 +74,21 @@ class TDzero_prediction():
 
         return next_states
 
-    def update(self, state, reward, next_state):
-        TD_target = reward + self.gamma * self.value_table[next_state]
-        TD_error = TD_target - self.value_table[state]
-        self.value_table[state] += self.alpha * TD_error
+    def update(self, state, reward, next_state, done):
+        self.que.append([state, reward, next_state])
+        if len(self.que) == self.n_step or done == True:
+            TD_target = 0
+            for i, tmp in enumerate(self.que):
+                TD_target += self.gamma**i * tmp[1]
 
-    def start_TDzero(self, num_episode):
-        for episode in range(num_episode):
+            TD_target += self.gamma**(i+1) * self.value_table[tmp[2]]
+
+            first_state = self.que[0][0]
+            TD_error = TD_target - self.value_table[first_state]
+            self.value_table[first_state] += self.alpha * TD_error
+
+    def start_TDn(self):
+        for episode in range(self.numEpisode):
             state = self.pacman.reset()
             done = False
             step = 0
@@ -91,7 +100,7 @@ class TDzero_prediction():
                 step += 1
 
                 # update
-                self.update(state, reward, next_state)
+                self.update(state, reward, next_state, done)
                 state = next_state
 
                 if done:
@@ -127,6 +136,6 @@ class TDzero_prediction():
 
 if __name__ == "__main__":
     pacman = Pacman(5)
-    TemporalDifferenceZero_prediction = TDzero_prediction(pacman, 1000)
+    TemporalDifference_prediction = TDn_prediction(pacman, 1000, 5)
     # print(MonteCarlo_policy.optimal_policy())
-    print(TemporalDifferenceZero_prediction.value_table.reshape(-1, 4))
+    print(TemporalDifference_prediction.value_table.reshape(-1, 4))

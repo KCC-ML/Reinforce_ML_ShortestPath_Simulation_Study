@@ -14,7 +14,11 @@ class MC_control():
         self.grid_dim = pacman.n
         self.numState = 4 * self.grid_dim ** 2
         self.action_list = [0, 1, 2]  # ["straight", "left", "right"]
-        self.q_table = np.zeros(self.numState, len(self.action_list))
+        self.q_table = np.zeros((self.numState, len(self.action_list)))
+        self.policy = np.zeros((self.numState, len(self.action_list)))
+        self.policy[0][:] = 0.8
+        self.policy[1][:] = 0.1
+        self.policy[2][:] = 0.1
 
         self.policy_evaluation(self.numEpisode)
         self.policy_improvement()
@@ -23,16 +27,13 @@ class MC_control():
         if np.random.randn() < self.epsilon:
             idx = np.random.choice(len(self.action_list), 1)[0]
         else:
-            next_values = np.array([])
-            for s in self.next_states(state):
-                next_values = np.append(next_values, self.value_table[s])
-            max_value = np.amax(next_values)
-            tie_Qchecker = np.where(next_values == max_value)[0]
+            max_value = np.amax(self.q_table[state])
+            tie_Qchecker = np.where(self.q_table[state] == max_value)[0]
 
             if len(tie_Qchecker) > 1:
                 idx = np.random.choice(tie_Qchecker, 1)[0]
             else:
-                idx = np.argmax(next_values)
+                idx = np.argmax(self.q_table[state])
 
         action = self.action_list[idx]
         return action
@@ -68,31 +69,46 @@ class MC_control():
         return next_states
 
     def update(self):
+        method = 'last_visit'  # ['first_visit', 'every_visit', 'last_visit']
         G_t = 0
-        visit_states = []
 
-        goal_state = 4 * ((self.pacman.n * self.pacman.gridmap_goal[0]) + self.pacman.gridmap_goal[1])
-        for i in range(4):
-            goal_state += i
-            self.value_table[goal_state] = self.pacman.goal_reward
+        if method == 'first_visit':
+            V_t_old = self.q_table
+            V_t_new = self.q_table
+            for sample in reversed(self.memory):
+                state = sample[0]
+                action = sample[1]
+                reward = sample[2]
+                G_t = reward + self.gamma * G_t
+                V_t_new[state][action] = V_t_old[state][action] + self.learning_rate * (G_t - V_t_old[state][action])
+            self.q_table = V_t_new
+        elif method == 'every_visit':
+            for sample in reversed(self.memory):
+                state = sample[0]
+                action = sample[1]
+                reward = sample[2]
+                G_t = reward + self.gamma * G_t
+                V_t = self.q_table[state][action]
+                self.q_table[state][action] = V_t + self.learning_rate * (G_t - V_t)
+        elif method == 'last_visit':
+            visit_states = []
 
-        # need to talk!!
-        for sample in reversed(self.memory):
-            state = sample[0]
-            reward = sample[1]
-            G_t = reward + self.gamma * G_t
-            V_t = self.value_table[state]
-            if state not in visit_states:
-                visit_states.append(state)
-                self.value_table[state] = V_t + self.learning_rate * (G_t - V_t)
+            for sample in reversed(self.memory):
+                state = sample[0]
+                action = sample[1]
+                reward = sample[2]
+                G_t = reward + self.gamma * G_t
+                V_t = self.q_table[state][action]
+                if state not in visit_states:
+                    visit_states.append(state)
+                    self.q_table[state][action] = V_t + self.learning_rate * (G_t - V_t)
 
-    def memorizer(self, state, reward, done):
-        self.memory.append([state, reward, done])
+    def memorizer(self, state, action, reward, done):
+        self.memory.append([state, action, reward, done])
 
     def policy_evaluation(self, num_episode):
+        # using action value function
         for episode in range(num_episode):
-            action_sequence = []
-            total_reward = 0
             state = self.pacman.reset()
             done = False
             step = 0
@@ -101,19 +117,12 @@ class MC_control():
                 action = self.get_action(state)
                 next_state, reward, done = self.pacman.step(state, action)
 
+                self.memorizer(state, action, reward, done)
+
                 step += 1
-
-                total_reward += reward
-                self.memorizer(state, reward, done)
-
                 state = next_state
 
                 if done:
-                    if episode % 100 == 0:
-                        print('finished at', state)
-                        print('episode :{}, The number of step:{}\n The total reward is: {}\n'.format(episode, step,
-                                                                                                      total_reward))
-
                     self.update()
                     self.memory.clear()
                     break
@@ -122,27 +131,23 @@ class MC_control():
                 print("{} episode done!".format(episode))
 
     def policy_improvement(self):
-        policy = np.zeros(self.numState)
         for state in range(self.numState):
-            next_values = np.array([])
-            for s in self.next_states(state):
-                next_values = np.append(next_values, self.value_table[s])
-            max_value = np.amax(next_values)
-            tie_Qchecker = np.where(next_values == max_value)[0]
+            max_value = np.amax(self.q_table[state])
+            tie_Qchecker = np.where(self.q_table[state] == max_value)[0]
 
             if len(tie_Qchecker) > 1:
-                idx = np.random.choice(tie_Qchecker, 1)[0]
+                self.policy[state] = self.epsilon / len(self.action_list)
+                self.policy[state,tie_Qchecker] = 1 - self.epsilon + self.epsilon / len(self.action_list)
             else:
-                idx = np.argmax(next_values)
-            policy[state] = self.action_list[idx]
+                self.policy[state] = self.epsilon / len(self.action_list)
+                self.policy[state,tie_Qchecker] = 1 - self.epsilon + self.epsilon / len(self.action_list)
 
-        # print(policy.reshape(-1, 4))
-        # print(self.value_table.reshape(-1, 4))
+        policy = self.policy
         return policy
 
 
 if __name__ == "__main__":
     pacman = Pacman(5)
     MonteCarlo_policy = MC_control(pacman, 1000)
-    print(MonteCarlo_policy.policy_improvement())
-    print(MonteCarlo_policy.value_table.reshape(-1, 4))
+    # print(MonteCarlo_policy.policy_improvement())
+    print(MonteCarlo_policy.q_table.reshape(-1, 3))

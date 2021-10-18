@@ -1,16 +1,19 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib import animation
+from collections import deque
 from scripts.pacman_entity import *
 
 
-class MC_prediction():
+class forward_TDl_prediction():
     def __init__(self, pacman, numEpisode):
         self.learning_rate = 0.01
         self.gamma = 0.9
-        self.memory = []
+        self.alpha = 0.1
+        self.lamda = 0.9
         self.numEpisode = numEpisode
-        self.totReward = np.array([])
+        self.que = deque([])
+        # self.que = deque([], maxlen=self.n_step)
 
         self.pacman = pacman
         self.grid_dim = pacman.n
@@ -18,8 +21,8 @@ class MC_prediction():
         self.value_table = np.zeros(self.numState)
         self.action_list = [0, 1, 2]  # ["straight", "left", "right"]
 
-        self.start_MC(self.numEpisode)
-        # self.policy_improvement()
+        self.start_fTDl()
+        # self.optimal_policy()
 
     def get_action(self, state):
         # if np.random.randn() < self.epsilon:
@@ -72,49 +75,31 @@ class MC_prediction():
 
         return next_states
 
-    def update(self):
-        method = 'last_visit' # ['first_visit', 'every_visit', 'last_visit']
-        G_t = 0
+    def update(self, state, reward, next_state, done):
+        self.que.append([state, reward, next_state])
+        if done == True:
+            length = len(self.que)
+            for _ in range(length):
+                TD_target = 0
+                R_old = 0
+                for i, tmp in enumerate(self.que):
+                    R_new = (self.lamda ** i) * (R_old + (self.gamma ** i) * tmp[1])
+                    V_new = (self.lamda ** i) * (self.gamma ** (i+1)) * self.value_table[tmp[2]]
 
-        goal_state = 4 * ((self.pacman.n * self.pacman.gridmap_goal[0]) + self.pacman.gridmap_goal[1])
-        for i in range(4):
-            self.value_table[goal_state+i] = self.pacman.goal_reward
+                    TD_target += (R_new+V_new)
 
-        if method == 'first_visit':
-            V_t_old = self.value_table
-            V_t_new = self.value_table
-            for sample in reversed(self.memory):
-                state = sample[0]
-                reward = sample[1]
-                G_t = reward + self.gamma * G_t
-                V_t_new[state] = V_t_old[state] + self.learning_rate * (G_t - V_t_old[state])
-            self.value_table = V_t_new
-        elif method == 'every_visit':
-            for sample in reversed(self.memory):
-                state = sample[0]
-                reward = sample[1]
-                G_t = reward + self.gamma * G_t
-                V_t = self.value_table[state]
-                self.value_table[state] = V_t + self.learning_rate * (G_t - V_t)
-        elif method == 'last_visit':
-            visit_states = []
+                    R_old = R_new
+                TD_target *= (1 - self.lamda)
+                first_state = self.que[0][0]
 
-            for sample in reversed(self.memory):
-                state = sample[0]
-                reward = sample[1]
-                G_t = reward + self.gamma * G_t
-                V_t = self.value_table[state]
-                if state not in visit_states:
-                    visit_states.append(state)
-                    self.value_table[state] = V_t + self.learning_rate * (G_t - V_t)
+                TD_error = TD_target - self.value_table[first_state]
+                self.value_table[first_state] += self.alpha * TD_error
+                self.que.popleft()
 
-    def memorizer(self, state, reward, done):
-        self.memory.append([state, reward, done])
+            self.que.clear()
 
-    def start_MC(self, num_episode):
-        for episode in range(num_episode):
-            action_sequence = []
-            total_reward = 0
+    def start_fTDl(self):
+        for episode in range(self.numEpisode):
             state = self.pacman.reset()
             done = False
             step = 0
@@ -125,25 +110,21 @@ class MC_prediction():
 
                 step += 1
 
-                total_reward += reward
-                self.memorizer(state, reward, done)
-
+                self.update(state, reward, next_state, done)
                 state = next_state
 
                 if done:
-                    if episode % 100 == 0:
-                        print('finished at', state)
-                        print('episode :{}, The number of step:{}\n The total reward is: {}\n'.format(episode, step,
-                                                                                                      total_reward))
-
-                    self.update()
-                    self.memory.clear()
                     break
 
             if episode % 10 == 0:
                 print("{} episode done!".format(episode))
 
-    def policy_improvement(self):
+        goal_state = 4 * ((self.pacman.n * self.pacman.gridmap_goal[0]) + self.pacman.gridmap_goal[1])
+        for i in range(4):
+            tmp = goal_state + i
+            self.value_table[tmp] = self.pacman.goal_reward
+
+    def optimal_policy(self):
         policy = np.zeros(self.numState)
         for state in range(self.numState):
             next_values = np.array([])
@@ -165,6 +146,6 @@ class MC_prediction():
 
 if __name__ == "__main__":
     pacman = Pacman(5)
-    MonteCarlo_prediction = MC_prediction(pacman, 1000)
-    print(MonteCarlo_prediction.policy_improvement())
-    print(MonteCarlo_prediction.value_table.reshape(-1, 4))
+    TemporalDifference_prediction = forward_TDl_prediction(pacman, 100)
+    # print(MonteCarlo_policy.optimal_policy())
+    print(TemporalDifference_prediction.value_table.reshape(-1, 4))

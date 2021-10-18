@@ -4,19 +4,21 @@ from scripts.simulation_entity import *
 from scripts.MDP import *
 import threading
 from scripts.MC_prediction import *
-from scripts.TDzero_prediction import *
+from scripts.TDn_prediction import *
+from scripts.forward_TDl_prediction import *
+from scripts.backward_TDl_prediction import *
+from scripts.MC_control import *
 
 class World:
     def __init__(self, n):
         # self.env = Env(n)
         self.pacman = Pacman(n)
-        gridmap = self.pacman.gridmap
         print("Initialize")
         self.pacman.visualization()
         self.thread = threading.Thread(target=self.iter_step)
         print("-------------------------------")
         # input("press any key")
-        self.algorithm = 'TDz' # ['random', 'MDP', 'MCP', 'TDz']
+        self.algorithm = 'MCC' # ['random', 'MDP', 'MCP', 'TDn', 'fTDl', 'bTDl', 'MCC']
 
         self.step = 0
         self.pacman_action_list = [0, 1, 2]
@@ -35,11 +37,24 @@ class World:
             # In MC_prediction script, 10000 episodes needed when gamma=1.0
             MonteCarlo_prediction = MC_prediction(self.pacman, 1000)
             print(MonteCarlo_prediction.value_table.reshape(-1, 4))
-            self.policy = MonteCarlo_prediction.optimal_policy()
-        elif self.algorithm == 'TDz':
-            TemporalDifferenceZero_prediction = TDzero_prediction(self.pacman, 1000)
-            print(TemporalDifferenceZero_prediction.value_table.reshape(-1, 4))
-            self.policy = TemporalDifferenceZero_prediction.optimal_policy()
+            self.policy = MonteCarlo_prediction.policy_improvement()
+        elif self.algorithm == 'TDn':
+            # TD(0) when n=1
+            TemporalDifference_prediction = TDn_prediction(self.pacman, 1000, 5)
+            print(TemporalDifference_prediction.value_table.reshape(-1, 4))
+            self.policy = TemporalDifference_prediction.optimal_policy()
+        elif self.algorithm == 'fTDl':
+            TemporalDifference_prediction = forward_TDl_prediction(self.pacman, 1000)
+            print(TemporalDifference_prediction.value_table.reshape(-1, 4))
+            self.policy = TemporalDifference_prediction.optimal_policy()
+        elif self.algorithm == 'bTDl':
+            TemporalDifference_prediction = backward_TDl_prediction(self.pacman, 1000, 1)
+            print(TemporalDifference_prediction.value_table.reshape(-1, 4))
+            self.policy = TemporalDifference_prediction.optimal_policy()
+        elif self.algorithm == 'MCC':
+            MonteCarlo_control = MC_control(self.pacman, 1000)
+            print(MonteCarlo_control.q_table.reshape(-1, 3))
+            self.policy = MonteCarlo_control.policy_improvement()
 
         self.thread.daemon = True
         self.thread.start()
@@ -66,10 +81,22 @@ class World:
             elif self.algorithm == 'MCP':
                 tmp = 4 * ((self.pacman.n * self.pacman.position[0]) + self.pacman.position[1]) + self.pacman.cardinal_point
                 pacman_direction = self.policy[tmp]
-            elif self.algorithm == 'TDz':
+            elif self.algorithm == 'TDn':
                 tmp = 4 * ((self.pacman.n * self.pacman.position[0]) + self.pacman.position[
                     1]) + self.pacman.cardinal_point
                 pacman_direction = self.policy[tmp]
+            elif self.algorithm == 'fTDl':
+                tmp = 4 * ((self.pacman.n * self.pacman.position[0]) + self.pacman.position[
+                    1]) + self.pacman.cardinal_point
+                pacman_direction = self.policy[tmp]
+            elif self.algorithm == 'bTDl':
+                tmp = 4 * ((self.pacman.n * self.pacman.position[0]) + self.pacman.position[
+                    1]) + self.pacman.cardinal_point
+                pacman_direction = self.policy[tmp]
+            elif self.algorithm == 'MCC':
+                tmp = 4 * ((self.pacman.n * self.pacman.position[0]) + self.pacman.position[
+                    1]) + self.pacman.cardinal_point
+                pacman_direction = np.random.choice(self.pacman_action_list, 1, p=self.policy[tmp])
 
             if pacman_direction == 0:
                 # pacman gets target
