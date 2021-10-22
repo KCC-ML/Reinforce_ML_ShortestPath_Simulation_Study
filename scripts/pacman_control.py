@@ -8,6 +8,9 @@ from scripts.TDn_prediction import *
 from scripts.forward_TDl_prediction import *
 from scripts.backward_TDl_prediction import *
 from scripts.MC_control import *
+from scripts.SARSA import *
+from scripts.nSARSA import *
+from scripts.fSARSAl import *
 
 class World:
     def __init__(self, n):
@@ -18,7 +21,7 @@ class World:
         self.thread = threading.Thread(target=self.iter_step)
         print("-------------------------------")
         # input("press any key")
-        self.algorithm = 'MCC' # ['random', 'MDP', 'MCP', 'TDn', 'fTDl', 'bTDl', 'MCC']
+        self.algorithm = 'fSARSAl' # ['random', 'MDP', 'MCP', 'TDn', 'fTDl', 'bTDl', 'MCC', 'SARSA', 'nSARSA', 'fSARSAl']
 
         self.step = 0
         self.pacman_action_list = [0, 1, 2]
@@ -54,7 +57,20 @@ class World:
         elif self.algorithm == 'MCC':
             MonteCarlo_control = MC_control(self.pacman, 1000)
             print(MonteCarlo_control.q_table.reshape(-1, 3))
-            self.policy = MonteCarlo_control.policy_improvement()
+            print(MonteCarlo_control.policy)
+            self.policy = MonteCarlo_control.policy
+        elif self.algorithm == 'SARSA':
+            SARSA_model = SARSA(self.pacman, 1000)
+            print(SARSA_model.q_table.reshape(-1, 3))
+            self.policy = SARSA_model.policy
+        elif self.algorithm == 'nSARSA':
+            nSARSA_model = nSARSA(self.pacman, 1000, 5)
+            print(nSARSA_model.q_table.reshape(-1, 3))
+            self.policy = nSARSA_model.policy
+        elif self.algorithm == 'fSARSAl':
+            fSARSAl_model = fSARSAl(self.pacman, 1000)
+            print(fSARSAl_model.q_table.reshape(-1, 3))
+            self.policy = fSARSAl_model.policy
 
         self.thread.daemon = True
         self.thread.start()
@@ -94,6 +110,18 @@ class World:
                     1]) + self.pacman.cardinal_point
                 pacman_direction = self.policy[tmp]
             elif self.algorithm == 'MCC':
+                tmp = 4 * ((self.pacman.n * self.pacman.position[0]) + self.pacman.position[
+                    1]) + self.pacman.cardinal_point
+                pacman_direction = np.random.choice(self.pacman_action_list, 1, p=self.policy[tmp])
+            elif self.algorithm == 'SARSA':
+                tmp = 4 * ((self.pacman.n * self.pacman.position[0]) + self.pacman.position[
+                    1]) + self.pacman.cardinal_point
+                pacman_direction = np.random.choice(self.pacman_action_list, 1, p=self.policy[tmp])
+            elif self.algorithm == 'nSARSA':
+                tmp = 4 * ((self.pacman.n * self.pacman.position[0]) + self.pacman.position[
+                    1]) + self.pacman.cardinal_point
+                pacman_direction = np.random.choice(self.pacman_action_list, 1, p=self.policy[tmp])
+            elif self.algorithm == 'fSARSAl':
                 tmp = 4 * ((self.pacman.n * self.pacman.position[0]) + self.pacman.position[
                     1]) + self.pacman.cardinal_point
                 pacman_direction = np.random.choice(self.pacman_action_list, 1, p=self.policy[tmp])
