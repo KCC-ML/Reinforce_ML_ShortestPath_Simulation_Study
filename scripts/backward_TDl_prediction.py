@@ -6,14 +6,12 @@ from scripts.pacman_entity import *
 
 
 class backward_TDl_prediction():
-    def __init__(self, pacman, numEpisode, n):
+    def __init__(self, pacman, numEpisode):
         self.learning_rate = 0.01
         self.gamma = 0.9
         self.alpha = 0.1
         self.lamda = 0.9
         self.numEpisode = numEpisode
-        self.n_step = n
-        self.que = deque([], maxlen=self.n_step)
 
         self.pacman = pacman
         self.grid_dim = pacman.n
@@ -22,7 +20,7 @@ class backward_TDl_prediction():
         self.eligibility = np.zeros(self.numState)
         self.action_list = [0, 1, 2]  # ["straight", "left", "right"]
 
-        self.start_bTDl()
+        self.policy_evaluation()
         # self.optimal_policy()
 
     def get_action(self, state):
@@ -77,27 +75,15 @@ class backward_TDl_prediction():
         return next_states
 
     def update(self, state, reward, next_state, done):
-        self.que.append([state, reward, next_state])
         self.eligibility *= self.lamda * self.gamma
         self.eligibility[state] += 1.0
 
-        if len(self.que) == self.n_step or done == True:
-            TD_target = 0
-            R_old = 0
-            for i, tmp in enumerate(self.que):
-                R_new = R_old + (self.gamma ** i) * tmp[1]
-                V_new = (self.gamma ** (i+1)) * self.value_table[tmp[2]]
+        TD_target = reward + self.gamma * self.value_table[next_state]
 
-                TD_target += (R_new+V_new)
+        TD_error = TD_target - self.value_table[state]
+        self.value_table[state] += self.alpha * TD_error * self.eligibility[state]
 
-                R_old = R_new
-
-            first_state = self.que[0][0]
-
-            TD_error = TD_target - self.value_table[first_state]
-            self.value_table[first_state] += self.alpha * TD_error * self.eligibility[first_state]
-
-    def start_bTDl(self):
+    def policy_evaluation(self):
         for episode in range(self.numEpisode):
             state = self.pacman.reset()
             done = False
@@ -145,6 +131,6 @@ class backward_TDl_prediction():
 
 if __name__ == "__main__":
     pacman = Pacman(5)
-    TemporalDifference_prediction = backward_TDl_prediction(pacman, 1000, 1)
+    TemporalDifference_prediction = backward_TDl_prediction(pacman, 1000)
     # print(MonteCarlo_policy.optimal_policy())
     print(TemporalDifference_prediction.value_table.reshape(-1, 4))

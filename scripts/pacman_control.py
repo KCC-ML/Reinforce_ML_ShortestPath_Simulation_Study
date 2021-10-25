@@ -11,6 +11,8 @@ from scripts.MC_control import *
 from scripts.SARSA import *
 from scripts.nSARSA import *
 from scripts.fSARSAl import *
+from scripts.bSARSAl import *
+
 
 class World:
     def __init__(self, n):
@@ -21,7 +23,7 @@ class World:
         self.thread = threading.Thread(target=self.iter_step)
         print("-------------------------------")
         # input("press any key")
-        self.algorithm = 'fSARSAl' # ['random', 'MDP', 'MCP', 'TDn', 'fTDl', 'bTDl', 'MCC', 'SARSA', 'nSARSA', 'fSARSAl']
+        self.algorithm = 'bTDl' # ['random', 'MDP', 'MCP', 'TDn', 'fTDl', 'bTDl', 'MCC', 'SARSA', 'nSARSA', 'fSARSAl', 'bSARSAl']
 
         self.step = 0
         self.pacman_action_list = [0, 1, 2]
@@ -51,7 +53,7 @@ class World:
             print(TemporalDifference_prediction.value_table.reshape(-1, 4))
             self.policy = TemporalDifference_prediction.optimal_policy()
         elif self.algorithm == 'bTDl':
-            TemporalDifference_prediction = backward_TDl_prediction(self.pacman, 1000, 1)
+            TemporalDifference_prediction = backward_TDl_prediction(self.pacman, 1000)
             print(TemporalDifference_prediction.value_table.reshape(-1, 4))
             self.policy = TemporalDifference_prediction.optimal_policy()
         elif self.algorithm == 'MCC':
@@ -71,6 +73,10 @@ class World:
             fSARSAl_model = fSARSAl(self.pacman, 1000)
             print(fSARSAl_model.q_table.reshape(-1, 3))
             self.policy = fSARSAl_model.policy
+        elif self.algorithm == 'bSARSAl':
+            bSARSAl_model = bSARSAl(self.pacman, 1000)
+            print(bSARSAl_model.q_table.reshape(-1, 3))
+            self.policy = bSARSAl_model.policy
 
         self.thread.daemon = True
         self.thread.start()
@@ -122,6 +128,10 @@ class World:
                     1]) + self.pacman.cardinal_point
                 pacman_direction = np.random.choice(self.pacman_action_list, 1, p=self.policy[tmp])
             elif self.algorithm == 'fSARSAl':
+                tmp = 4 * ((self.pacman.n * self.pacman.position[0]) + self.pacman.position[
+                    1]) + self.pacman.cardinal_point
+                pacman_direction = np.random.choice(self.pacman_action_list, 1, p=self.policy[tmp])
+            elif self.algorithm == 'bSARSAl':
                 tmp = 4 * ((self.pacman.n * self.pacman.position[0]) + self.pacman.position[
                     1]) + self.pacman.cardinal_point
                 pacman_direction = np.random.choice(self.pacman_action_list, 1, p=self.policy[tmp])
