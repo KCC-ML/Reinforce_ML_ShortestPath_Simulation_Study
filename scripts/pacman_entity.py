@@ -3,8 +3,8 @@ import random
 
 
 # set seed number to check env. goes right
-# random.seed(13)
-# np.random.seed(13)
+random.seed(13)
+np.random.seed(13)
 
 
 class Env:
@@ -14,6 +14,7 @@ class Env:
         self.gridmap = 0
         self.gridmap_goal = np.zeros([0,0])
         self._grid()
+        self.generate_wall()
 
     def _grid(self):
         # create gridmap
@@ -38,56 +39,117 @@ class Env:
         #         self.gridmap_goal = np.array([e_y, e_x])
         #         break
 
-    def goal_position(self):
-        return self.gridmap_goal
+
+    def generate_wall(self):
+        # (direction, grid_row, grid_col), initiate with all zeros (no inner walls)
+        self.walls = np.zeros((4, self.n, self.n))
+        # change outer walls value as one
+        self.walls[0, 0, :] = 1 # upper walls
+        self.walls[1, :, self.n-1] = 1 # right walls
+        self.walls[2, self.n-1, :] = 1 # lower walls
+        self.walls[3, :, 0] = 1 # left walls
+
+        # model-based
+        wall_row = 3
+        self.walls[0, wall_row, 0] = 1
+        self.walls[2, wall_row, 1] = 1
+        self.walls[3, wall_row, 2] = 1
+        self.walls[0, wall_row, 2] = 1
+
+        self.walls[2, wall_row - 1, 0] = 1
+        self.walls[0, wall_row + 1, 1] = 1
+        self.walls[1, wall_row, 1] = 1
+        self.walls[2, wall_row - 1, 2] = 1
+
+        # test
+        # wall_row = 2
+        # self.walls[1, wall_row, 2] = 1
+        # self.walls[3, wall_row, 3] = 1
+        # self.walls[0, wall_row, 3] = 1
+        # self.walls[2, wall_row-1, 3] = 1
+        #
+        # wall_row = 1
+        # self.walls[1, wall_row, 3] = 1
+        # self.walls[3, wall_row, 4] = 1
+        #
+        # wall_row = 0
+        # self.walls[1, wall_row, 2] = 1
+        # self.walls[3, wall_row, 3] = 1
+
+        # model-free
+        # ratio = 0.1
+        # tot_wall_num = 2 * self.n * (self.n - 1)
+        # cnt = 0
+        # while cnt < int(tot_wall_num * ratio):
+        #     rand_num = random.randint(0, tot_wall_num-1)
+        #     wall_direction = (rand_num // self.n**2)
+        #     wall_row = ((rand_num % self.n**2) // self.n) - 1
+        #     wall_col = ((rand_num % self.n**2) % self.n) - 1
+        #
+        #     if self.walls[wall_direction, wall_row, wall_col] == 1:
+        #         continue
+        #     elif self.walls[:, wall_row, wall_col].sum() == 3:
+        #         continue
+        #
+        #     self.walls[wall_direction, wall_row, wall_col] = 1 # if zero there is no wall, if one there is a wall.
+        #     if wall_direction == 0:
+        #         self.walls[2, wall_row-1, wall_col] = 1
+        #     elif wall_direction == 1:
+        #         self.walls[3, wall_row, wall_col+1] = 1
+        #     elif wall_direction == 2:
+        #         self.walls[0, wall_row+1, wall_col] = 1
+        #     elif wall_direction == 3:
+        #         self.walls[1, wall_row, wall_col-1] = 1
+        #     cnt += 1
 
 class Pacman(Env):
     def __init__(self, n):
         super().__init__(n)
         self.cardinal_point = "north"
+        self.first_position = np.array([0,0])
         self.position = np.array([0,0])
         self.set_pacman()
 
     # pacman's movement
-    def straight(self, wall_lines, agent_coordinate):
+    def straight(self, wall_lines):
         cardinal_point = self.cardinal_point
         p_y = self.position[0]
         p_x = self.position[1]
 
         if cardinal_point == "east":
             if wall_lines[1, p_y, p_x] == 1:
-                print("pacman goes forward but meets wall")
+                #print("pacman goes forward but meets wall")
                 tmp_p_x = p_x
                 tmp_p_y = p_y
             else:
-                print('pacman goes forward')
+                #print('pacman goes forward')
                 tmp_p_x = p_x + 1
                 tmp_p_y = p_y
         elif cardinal_point == "west":
             if wall_lines[3, p_y, p_x] == 1:
-                print("pacman goes forward but meets wall")
+                #print("pacman goes forward but meets wall")
                 tmp_p_x = p_x
                 tmp_p_y = p_y
             else:
-                print('pacman goes forward')
+                #print('pacman goes forward')
                 tmp_p_x = p_x - 1
                 tmp_p_y = p_y
         elif cardinal_point == "south":
             if wall_lines[2, p_y, p_x] == 1:
-                print("pacman goes forward but meets wall")
+                #print("pacman goes forward but meets wall")
                 tmp_p_x = p_x
                 tmp_p_y = p_y
             else:
-                print('pacman goes forward')
+                #print('pacman goes forward')
                 tmp_p_y = p_y + 1
                 tmp_p_x = p_x
         elif cardinal_point == "north":
             if wall_lines[0, p_y, p_x] == 1:
-                print("pacman goes forward but meets wall")
+                #print("pacman goes forward but meets wall")
                 tmp_p_x = p_x
                 tmp_p_y = p_y
             else:
-                print('pacman goes forward')
+                #print('pacman goes forward')
                 tmp_p_y = p_y - 1
                 tmp_p_x = p_x
 
@@ -101,7 +163,7 @@ class Pacman(Env):
             return 1
 
     def left(self):
-        print("pacman turns left")
+        #print("pacman turns left")
         if self.cardinal_point == "east":
             self.cardinal_point = "north"
         elif self.cardinal_point == "west":
@@ -113,7 +175,7 @@ class Pacman(Env):
         return self.cardinal_point
 
     def right(self):
-        print("pacman turns right")
+        #print("pacman turns right")
         if self.cardinal_point == "east":
             self.cardinal_point = "south"
         elif self.cardinal_point == "west":
