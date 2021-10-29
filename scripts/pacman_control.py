@@ -1,7 +1,7 @@
 import time
 from pacman_entity import *
 from simulation_entity import *
-from MC_prediction import *
+from MC_Control import *
 import threading
 
 class World:
@@ -22,7 +22,7 @@ class World:
         self.pacman_cardinal_points = ["north", "east", "south", "west"]
 
 
-        self.model = MCPrediction(self)
+        self.model = MCControl(self)
         self.thread = threading.Thread(target=self.model.iteration)
 
     def main(self):
@@ -43,7 +43,7 @@ class World:
 
     def iter_step(self):
         T = 0
-        S = []
+        pairs = []
         self.pacman.position = self.pacman.first_position
         while True:
             # if event.keysym and np.any(self.pacman.gridmap_goal != self.pacman.position):
@@ -57,7 +57,7 @@ class World:
             pacman_state = np.append(self.pacman.position, self.pacman_cardinal_points.index(self.pacman.cardinal_point))
             if pacman_direction == "straight":
                 if self.pacman.straight(self.env.walls) == 1:
-                    return T, S
+                    return T, pairs
                     #self.window.destroy()
                 #self.pacman.visualization()
             elif pacman_direction == "left":
@@ -70,8 +70,8 @@ class World:
             #time.sleep(0.5)
 
             T += 1
-            S.append(pacman_state.tolist())
-            #print(S, T)
+            pairs.append(pacman_state.tolist().append(pacman_direction))
+            #print(pairs, T)
 
 
 if __name__ == '__main__':
