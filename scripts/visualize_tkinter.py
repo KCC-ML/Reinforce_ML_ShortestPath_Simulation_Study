@@ -1,6 +1,6 @@
 from tkinter import *
 import random
-from scripts.packman import *
+from scripts.pacman import *
 from PIL import Image,ImageTk
 import numpy as np
 

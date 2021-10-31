@@ -59,7 +59,7 @@ class CanvasGrid:
                 end_y = start_y - self.line_len
             self.canvas.create_line(start_x, start_y, end_x, end_y, fill='white')
 
-        wall_index = np.where(self.walls == 1)
+        wall_index = np.where(self.walls==1)
         for idx, _ in enumerate(wall_index[0]):
             if wall_index[0][idx] == 0:
                 start_x = 20 + wall_index[2][idx] * self.line_len
@@ -89,38 +89,10 @@ class CanvasGrid:
         self.walls = np.zeros((4, self.grid_dim, self.grid_dim))
         # change outer walls value as one
         self.walls[0, 0, :] = 1 # upper walls
-        self.walls[1, :, self.grid_dim-1] = 1 # right walls
+        self.walls[1, : , self.grid_dim-1] = 1 # right walls
         self.walls[2, self.grid_dim-1, :] = 1 # lower walls
         self.walls[3, :, 0] = 1 # left walls
 
-        # model-based
-        # wall_row = 3
-        # self.walls[0, wall_row, 0] = 1
-        # self.walls[2, wall_row, 1] = 1
-        # self.walls[3, wall_row, 2] = 1
-        # self.walls[0, wall_row, 2] = 1
-        #
-        # self.walls[2, wall_row - 1, 0] = 1
-        # self.walls[0, wall_row + 1, 1] = 1
-        # self.walls[1, wall_row, 1] = 1
-        # self.walls[2, wall_row - 1, 2] = 1
-
-        # test
-        # wall_row = 2
-        # self.walls[1, wall_row, 2] = 1
-        # self.walls[3, wall_row, 3] = 1
-        # self.walls[0, wall_row, 3] = 1
-        # self.walls[2, wall_row-1, 3] = 1
-        #
-        # wall_row = 1
-        # self.walls[1, wall_row, 3] = 1
-        # self.walls[3, wall_row, 4] = 1
-        #
-        # wall_row = 0
-        # self.walls[1, wall_row, 2] = 1
-        # self.walls[3, wall_row, 3] = 1
-
-        # model-free
         ratio = 0.1
         tot_wall_num = 2 * self.grid_dim * (self.grid_dim - 1)
         cnt = 0
