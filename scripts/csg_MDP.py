@@ -1,20 +1,23 @@
 import numpy as np
-from packman_control_5by5 import World
+import random
 
 class MDP:
-    def __init__(self, canvas_grid):
+    def __init__(self, canvas_grid, target):
         self.grid_dim = canvas_grid.grid_dim
         self.State_sum = (self.grid_dim ** 2) * 4
         self.agent = canvas_grid.pacman
         self.walls = canvas_grid.wall_lines()
         self.gamma = 0.9
         self.action = [0, 1, 2]
-        self.theta = 0.00001
+        self.theta = 0.000001
+        self.target_y = target[0]
+        self.target_x = target[1]
         self.target_reward = 0
         self.reward = np.ones((self.State_sum, 1)) * -1
-        for i in range(69, 73):
-            self.reward[i, 0] = self.target_reward
         self.initial_policy = np.zeros((100, 3))
+        self.initial_action_probability_straight = random.randrange(0, 10)
+        self.initial_action_probability_left = random.randrange(0, 10-self.initial_action_probability_straight)
+        self.initial_action_probability_right = 10 - self.initial_action_probability_straight - self.initial_action_probability_left
         self.initial_P = np.zeros((self.State_sum, self.State_sum))
         self.initial_V = np.zeros((self.State_sum, 1))
         self.iteration = 1
@@ -22,6 +25,13 @@ class MDP:
     # https://www.youtube.com/watch?v=3vuw23_l_oA&list=PLKs7xpqpX1beJ5-EOFDXTVckBQFFyTxUH&index=6 28:29
     # 위 링크 강의 영상에서 아래식을 가지고 코딩
     # vk+1 을 구하기 위해서 필요한 것 1)R파이 2)감마 3)P파이 4)vk
+
+    # target 지점의 reward 업데이트
+    def reward_vector(self):
+        converge_vector_state_start = 4 * 5 * self.target_y + (4 * self.target_x)
+        converge_vector_state_end = converge_vector_state_start + 4
+        for i in range(converge_vector_state_start, converge_vector_state_end):
+            self.reward[i, 0] = self.target_reward
 
     # P파이 를 구하기 위한 메소드(P = 100x100의 s -> s'를 표현한 행렬)
     # policy_improvement 가 끝난 후에 다시 구해줘야 함
@@ -74,9 +84,20 @@ class MDP:
             for i in range(100):
                 for j in range(3):
                     if j == 0:
-                        improved_policy[i, j] = 0.8
+                        # initial_policy 고정
+                        # improved_policy[i, j] = 0.8
+                        # initial_policy 랜덤
+                        improved_policy[i, j] = self.initial_action_probability_straight / 10
+                    elif j == 1:
+                        # initial_policy 고정
+                        # improved_policy[i, j] = 0.1
+                        # initial_policy 랜덤
+                        improved_policy[i, j] = self.initial_action_probability_left / 10
                     else:
-                        improved_policy[i, j] = 0.1
+                        # initial_policy 고정
+                        # improved_policy[i, j] = 0.1
+                        # initial_policy 랜덤
+                        improved_policy[i, j] = self.initial_action_probability_right / 10
             return improved_policy
         else:
             for State_no in range(100):
@@ -135,7 +156,11 @@ class MDP:
     # 위 과정을 반복
     def policy_iteration(self):
         print("iteration: ", self.iteration)
+        self.reward_vector()
+        # print(self.reward)
         initial_policy = self.policy_improvement(self.initial_policy, self.initial_V, 0)
+        print("initial_policy: ", initial_policy)
+        # print(self.target[0])
         next_P = self.state_transition_matrix(self.initial_P, initial_policy)
         next_V = self.policy_evaluation(self.reward, next_P, self.initial_V)
         improved_policy = self.policy_improvement(initial_policy, next_V, self.iteration)
