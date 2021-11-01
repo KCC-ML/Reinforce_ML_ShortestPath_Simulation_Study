@@ -38,6 +38,15 @@ class MC_control():
     def update(self):
         G_t = 0
 
+        # V_t_old = self.value_table
+        # V_t_new = self.value_table
+        # for sample in reversed(self.memory):
+        #     state = sample[0]
+        #     reward = sample[1]
+        #     G_t = reward + self.gamma * G_t
+        #     V_t_new[state] = V_t_old[state] + self.learning_rate * (G_t - V_t_old[state])
+        # self.value_table = V_t_new
+
         for sample in reversed(self.memory):
             state = sample[0]
             action = sample[1]

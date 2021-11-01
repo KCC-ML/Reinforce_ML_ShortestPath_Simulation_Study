@@ -17,3 +17,6 @@ print(env.observation_space.shape)
 
 print(env.action_space)
 print(env.action_space)
+
+tmp = env.reset()
+print(tmp)
