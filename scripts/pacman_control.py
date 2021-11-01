@@ -48,15 +48,30 @@ class World:
         while True:
             # if event.keysym and np.any(self.pacman.gridmap_goal != self.pacman.position):
             #print("-------------------------------")
-            self.step += 1
             #print("step: ", self.step)
             #pacman_direction = random.choice(self.pacman_action_list)
             pacman_cardinal_point = self.pacman_cardinal_points.index(self.pacman.cardinal_point)
             pacman_direction = np.random.choice(self.pacman_action_list, 1, p=self.model.policy_matrix[
                 self.pacman.position[0] * (4 * 5) + self.pacman.position[1] * 4 + pacman_cardinal_point])
             pacman_state = np.append(self.pacman.position, self.pacman_cardinal_points.index(self.pacman.cardinal_point))
+
+            pairs.append([])
+            tmp = pacman_state.tolist()
+            tmp.append(self.pacman_action_list.index(pacman_direction))
+            pairs[T].append(tmp)
+            T += 1
+            self.step += 1
+
             if pacman_direction == "straight":
                 if self.pacman.straight(self.env.walls) == 1:
+                    pacman_state = np.array((2, 3, 3))
+                    pacman_direction = np.array(('straight'))
+                    pairs.append([])
+                    tmp = pacman_state.tolist()
+                    tmp.append(self.pacman_action_list.index(pacman_direction))
+                    pairs[T].append(tmp)
+                    T += 1
+                    self.step += 1
                     print('step = ', self.step)
                     return T, np.array(pairs)
                 #self.pacman.visualization()
@@ -67,15 +82,9 @@ class World:
                 self.pacman.right()
                 #self.pacman.visualization()
             self.cv.set_agent(self.pacman, self.pacman.cardinal_point)
-            time.sleep(0.01)
+            #time.sleep(0.01)
 
-            pairs.append([])
-            tmp = pacman_state.tolist()
-            tmp.append(self.pacman_action_list.index(pacman_direction))
-            pairs[T].append(tmp)
-            #print(tmp)
 
-            T += 1
 
 if __name__ == '__main__':
     World(5).main()

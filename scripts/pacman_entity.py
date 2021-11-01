@@ -3,8 +3,8 @@ import random
 
 
 # set seed number to check env. goes right
-random.seed(13)
-np.random.seed(13)
+# random.seed(13)
+# np.random.seed(13)
 
 
 class Env:

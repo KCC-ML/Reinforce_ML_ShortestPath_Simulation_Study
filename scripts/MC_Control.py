@@ -8,7 +8,7 @@ class MCControl():
         self.world = world
         self.agent_direction_count = self.world.env.walls.shape[0]
         self.reward = -1
-        self.gamma = 0.9
+        self.gamma = 0.1
         self.state_num = self.world.grid_dim ** 2 * self.agent_direction_count
         self.target_position = self.world.env.gridmap_goal
         self.actions = self.translate_action_index(self.world.pacman_action_list)
@@ -51,7 +51,7 @@ class MCControl():
     def initialize_R(self):
         self.R = self.reward * np.ones((self.state_num * len(self.actions), 1))
         temp = self.agent_direction_count * self.world.grid_dim * len(self.actions) * self.target_position[0] + self.agent_direction_count * len(self.actions) * self.target_position[1]
-        self.R[temp: temp + self.agent_direction_count * len(self.actions)] = 0
+        self.R[temp: temp + self.agent_direction_count * len(self.actions)] = 5
         print(self.R.size)
         print(np.where(self.R == 0))
 
@@ -65,17 +65,17 @@ class MCControl():
 
     def iteration(self):
         episode = 1
-        while episode < 3000:
+        while episode < 5000:
             print('\nepisode = ', episode)
-            T, pairs = self.create_episode()   # episode 완료 -> T, pairs 확정
+            T, pairs = self.create_episode()    # episode 완료 -> T, pairs 확정
             G = 0
             for t in range(T-1, -1, -1):
                 pair_index = self.transform_pair_index(pairs[t])
                 G = self.gamma * G + self.R[pair_index]
-                if pairs[t].tolist() not in pairs[:t].tolist():
-                    self.Gs[pair_index] += G
-                    self.N[pair_index] += 1
-                    self.Q[pair_index] = self.Gs[pair_index] / self.N[pair_index]
+                #if pairs[t].tolist() not in pairs[:t].tolist():
+                self.Gs[pair_index] += G
+                self.N[pair_index] += 1
+                self.Q[pair_index] = self.Gs[pair_index] / self.N[pair_index]
             for s_index in range(self.state_num):
                 s_action_values = self.Q[s_index * len(self.actions): s_index * len(self.actions) + 3]
                 tmp = np.squeeze(s_action_values)
