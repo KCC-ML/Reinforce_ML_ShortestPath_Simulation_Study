@@ -1,7 +1,7 @@
 import time
 from pacman_entity import *
 from simulation_entity import *
-from MC_Control import *
+from TD_onestep import *
 import threading
 
 class World:
@@ -19,7 +19,7 @@ class World:
         self.pacman_action_list = ["straight", "left", "right"]
         self.pacman_cardinal_points = ["north", "east", "south", "west"]
 
-        self.model = MCControl(self)
+        self.model = TDZero(self)
         self.thread = threading.Thread(target=self.model.iteration)
 
     def main(self):
@@ -41,8 +41,6 @@ class World:
 
 
     def iter_step(self):
-        T = 0
-        pairs = []
         self.step = 0
         self.pacman.position = self.pacman.first_position
         while True:
@@ -53,27 +51,14 @@ class World:
             pacman_cardinal_point = self.pacman_cardinal_points.index(self.pacman.cardinal_point)
             pacman_direction = np.random.choice(self.pacman_action_list, 1, p=self.model.policy_matrix[
                 self.pacman.position[0] * (4 * 5) + self.pacman.position[1] * 4 + pacman_cardinal_point])
-            pacman_state = np.append(self.pacman.position, self.pacman_cardinal_points.index(self.pacman.cardinal_point))
 
-            pairs.append([])
-            tmp = pacman_state.tolist()
-            tmp.append(self.pacman_action_list.index(pacman_direction))
-            pairs[T].append(tmp)
-            T += 1
             self.step += 1
 
             if pacman_direction == "straight":
                 if self.pacman.straight(self.env.walls) == 1:
-                    pacman_state = np.array((2, 3, 3))
-                    pacman_direction = np.array(('straight'))
-                    pairs.append([])
-                    tmp = pacman_state.tolist()
-                    tmp.append(self.pacman_action_list.index(pacman_direction))
-                    pairs[T].append(tmp)
-                    T += 1
                     self.step += 1
                     print('step = ', self.step)
-                    return T, np.array(pairs)
+                    return next_s
                 #self.pacman.visualization()
             elif pacman_direction == "left":
                 self.pacman.left()
@@ -82,7 +67,12 @@ class World:
                 self.pacman.right()
                 #self.pacman.visualization()
             self.cv.set_agent(self.pacman, self.pacman.cardinal_point)
-            #time.sleep(0.01)
+            #time.sleep(0.3)
+
+            pacman_state = np.append(self.pacman.position,
+                                     self.pacman_cardinal_points.index(self.pacman.cardinal_point))
+            next_s = pacman_state
+            return next_s
 
 
 
