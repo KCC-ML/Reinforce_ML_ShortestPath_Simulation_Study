@@ -8,13 +8,15 @@ class MCControl():
         self.world = world
         self.agent_direction_count = self.world.env.walls.shape[0]
         self.reward = -1
+        self.terminal_reward = 5
         self.gamma = 0.1
         self.state_num = self.world.grid_dim ** 2 * self.agent_direction_count
         self.target_position = self.world.env.gridmap_goal
         self.actions = self.translate_action_index(self.world.pacman_action_list)
-        self.epsilon = 0.1
+        self.epsilon = 0.2
         self.start_policy = [1 / len(self.actions), 1 / len(self.actions), 1 / len(self.actions)]
         self.greedy_A = []
+        self.alpha = 0.1
         self.initialize_data()
 
         # MC-Control(On-policy)
@@ -37,26 +39,26 @@ class MCControl():
 
     def initialize_data(self):
         self.initialize_Q()
-        self.initialize_N()
-        self.initialize_R()
-        self.initialize_Gs()
+        # self.initialize_N()
+        # self.initialize_R()
+        # self.initialize_Gs()
         self.matrixization_policy()
 
     def initialize_Q(self):
         self.Q = np.zeros((self.state_num * len(self.actions), 1))
 
-    def initialize_N(self):
-        self.N = np.zeros((self.state_num * len(self.actions), 1))
+    # def initialize_N(self):
+    #     self.N = np.zeros((self.state_num * len(self.actions), 1))
 
-    def initialize_R(self):
-        self.R = self.reward * np.ones((self.state_num * len(self.actions), 1))
-        temp = self.agent_direction_count * self.world.grid_dim * len(self.actions) * self.target_position[0] + self.agent_direction_count * len(self.actions) * self.target_position[1]
-        self.R[temp: temp + self.agent_direction_count * len(self.actions)] = 5
-        print(self.R.size)
-        print(np.where(self.R == 0))
+    # def initialize_R(self):
+    #     self.R = self.reward * np.ones((self.state_num * len(self.actions), 1))
+    #     temp = self.agent_direction_count * self.world.grid_dim * len(self.actions) * self.target_position[0] + self.agent_direction_count * len(self.actions) * self.target_position[1]
+    #     self.R[temp: temp + self.agent_direction_count * len(self.actions)] = 5
+    #     print(self.R.size)
+    #     print(np.where(self.R == 0))
 
-    def initialize_Gs(self):
-        self.Gs = np.zeros((self.state_num * len(self.actions), 1))
+    # def initialize_Gs(self):
+    #     self.Gs = np.zeros((self.state_num * len(self.actions), 1))
 
     def matrixization_policy(self):
         self.policy_matrix = np.reshape(self.start_policy * self.state_num, (self.state_num, len(self.start_policy)))
@@ -71,11 +73,13 @@ class MCControl():
             G = 0
             for t in range(T-1, -1, -1):
                 pair_index = self.transform_pair_index(pairs[t])
-                G = self.gamma * G + self.R[pair_index]
+                if t == T-1:
+                    G = self.gamma * G + self.terminal_reward
+                else: G = self.gamma * G + self.reward
                 #if pairs[t].tolist() not in pairs[:t].tolist():
-                self.Gs[pair_index] += G
-                self.N[pair_index] += 1
-                self.Q[pair_index] = self.Gs[pair_index] / self.N[pair_index]
+                #self.Gs[pair_index] += G
+                #self.N[pair_index] += 1
+                self.Q[pair_index] = self.Q[pair_index] + self.alpha * (G - self.Q[pair_index])
             for s_index in range(self.state_num):
                 s_action_values = self.Q[s_index * len(self.actions): s_index * len(self.actions) + 3]
                 tmp = np.squeeze(s_action_values)

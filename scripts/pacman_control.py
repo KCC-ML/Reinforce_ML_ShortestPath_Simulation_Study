@@ -45,6 +45,7 @@ class World:
         pairs = []
         self.step = 0
         self.pacman.position = self.pacman.first_position
+        self.pacman.cardinal_point = 'north'
         while True:
             # if event.keysym and np.any(self.pacman.gridmap_goal != self.pacman.position):
             #print("-------------------------------")
@@ -64,14 +65,6 @@ class World:
 
             if pacman_direction == "straight":
                 if self.pacman.straight(self.env.walls) == 1:
-                    pacman_state = np.array((2, 3, 3))
-                    pacman_direction = np.array(('straight'))
-                    pairs.append([])
-                    tmp = pacman_state.tolist()
-                    tmp.append(self.pacman_action_list.index(pacman_direction))
-                    pairs[T].append(tmp)
-                    T += 1
-                    self.step += 1
                     print('step = ', self.step)
                     return T, np.array(pairs)
                 #self.pacman.visualization()
@@ -82,7 +75,7 @@ class World:
                 self.pacman.right()
                 #self.pacman.visualization()
             self.cv.set_agent(self.pacman, self.pacman.cardinal_point)
-            #time.sleep(0.01)
+            #time.sleep(0.1)
 
 
 
