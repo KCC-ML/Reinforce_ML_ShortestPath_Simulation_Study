@@ -2,6 +2,7 @@ import gym
 from collections import deque
 import numpy as np
 import matplotlib.pyplot as plt
+import time
 
 
 class linearVFA_MCcontrol_cartpole():
@@ -13,10 +14,13 @@ class linearVFA_MCcontrol_cartpole():
         self.epsilon = 0.1
         self.learning_rate = 0.01
         self.gamma = 0.9
-        self.delta = 0.0001
 
     def policy_evaluation(self):
-        for e in range(self.episodes):
+        plt.ion()
+        figure, ax = plt.subplots()
+
+        rewards = []
+        for e in range(1, self.episodes+1):
             state = self.env.reset()
             tot_reward = 0
 
@@ -30,22 +34,19 @@ class linearVFA_MCcontrol_cartpole():
                 state = next_state
 
                 if done:
-                    conv_check = self.update()
+                    rewards.append(tot_reward)
+                    self.update()
                     break
 
             if e % 100 == 0:
                 print('{} episodes are done.'.format(e))
-            if conv_check:
-                print(f'Iteration stops at {e} episodes.')
-                break
 
-    def state_scaler(self, state):
-        state_min = np.array([-4.8000002e+00, -3.4028235e+38, -4.1887903e-01, -3.4028235e+38])
-        state_max = np.array([4.8000002e+00, 3.4028235e+38, 4.1887903e-01, 3.4028235e+38])
-
-        scaled_state = (state - state_min) / (state_max - state_min)
-
-        return scaled_state
+            x = np.arange(e)
+            y = rewards
+            line1, = ax.plot(x, y, color='blue')
+            figure.canvas.draw()
+            figure.canvas.flush_events()
+            time.sleep(0.1)
 
     def policy(self, state, weight):
         nA = self.env.action_space.n
@@ -57,7 +58,6 @@ class linearVFA_MCcontrol_cartpole():
         return sample
 
     def Q(self, state, action, weight):
-        state = self.state_scaler(state)
         value = state.dot(weight[action])
 
         return value
@@ -96,17 +96,7 @@ class linearVFA_MCcontrol_cartpole():
         delta = self.learning_rate * (G_t - q_t) * state
         self.weight[action] += delta
 
-        conv_check = self.convergence_check(delta)
-
         self.que.clear()
-
-        return conv_check
-
-    def convergence_check(self, delta):
-        print("===",delta)
-        res = np.all(delta < self.delta)
-
-        return res
 
 
 if __name__ == "__main__":
@@ -127,7 +117,7 @@ if __name__ == "__main__":
             action = agent.policy(state, agent.weight)
             state, reward, done, _ = env.step(action)
             tot_reward += reward
-            env.render()
+            # env.render()
 
             if done:
                 rewards.append(tot_reward)
