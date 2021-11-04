@@ -6,7 +6,7 @@ import time
 
 
 class linearVFA_MCcontrol_cartpole():
-    def __init__(self, episodes=100):
+    def __init__(self, episodes=200):
         self.env = gym.make('CartPole-v1')
         self.episodes = episodes
         self.que = deque([])
