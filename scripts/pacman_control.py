@@ -3,6 +3,7 @@ from pacman_entity import *
 from simulation_entity import *
 from TD_onestep import *
 import threading
+import matplotlib.pyplot as plt
 
 class World:
     def __init__(self, n):
@@ -35,44 +36,55 @@ class World:
 
         self.window.mainloop()
 
-        print(self.model.Q.reshape(-1, 3))
-        print(self.model.policy_matrix)
-        print("Pacman arrived at goal in {} steps.".format(self.step))
-
+        #print(self.model.V.reshape(-1, 4))
+        #print(self.model.policy_matrix)
+        #print("Pacman arrived at goal in {} steps.".format(self.step))
+        plt.plot(self.model.steps)
+        plt.ylim(0, 200)
+        plt.show()
 
     def iter_step(self):
-        self.step = 0
-        self.pacman.position = self.pacman.first_position
-        while True:
-            # if event.keysym and np.any(self.pacman.gridmap_goal != self.pacman.position):
-            #print("-------------------------------")
-            #print("step: ", self.step)
-            #pacman_direction = random.choice(self.pacman_action_list)
-            pacman_cardinal_point = self.pacman_cardinal_points.index(self.pacman.cardinal_point)
-            pacman_direction = np.random.choice(self.pacman_action_list, 1, p=self.model.policy_matrix[
-                self.pacman.position[0] * (4 * 5) + self.pacman.position[1] * 4 + pacman_cardinal_point])
+        #self.step = 0
+        #self.pacman.position = self.pacman.first_position
 
-            self.step += 1
+        # if event.keysym and np.any(self.pacman.gridmap_goal != self.pacman.position):
+        #print("-------------------------------")
+        #print("step: ", self.step)
+        #pacman_direction = random.choice(self.pacman_action_list)
 
-            if pacman_direction == "straight":
-                if self.pacman.straight(self.env.walls) == 1:
-                    self.step += 1
-                    print('step = ', self.step)
-                    return next_s
-                #self.pacman.visualization()
-            elif pacman_direction == "left":
-                self.pacman.left()
-                #self.pacman.visualization()
-            elif pacman_direction == "right":
-                self.pacman.right()
-                #self.pacman.visualization()
-            self.cv.set_agent(self.pacman, self.pacman.cardinal_point)
-            #time.sleep(0.3)
+        pacman_cardinal_point = self.pacman_cardinal_points.index(self.pacman.cardinal_point)
+        # print(self.model.policy_matrix.reshape(-1, 3))
+        # print(self.model.policy_matrix[
+        #           self.pacman.position[0] * (4 * 5) + self.pacman.position[1] * 4 + pacman_cardinal_point])
+        # print(self.pacman.position)
+        # print(pacman_cardinal_point)
+        pacman_direction = np.random.choice(self.pacman_action_list, 1, p=self.model.policy_matrix[
+            self.pacman.position[0] * (4 * 5) + self.pacman.position[1] * 4 + pacman_cardinal_point])
 
-            pacman_state = np.append(self.pacman.position,
-                                     self.pacman_cardinal_points.index(self.pacman.cardinal_point))
-            next_s = pacman_state
-            return next_s
+        #self.step += 1
+
+        if pacman_direction == "straight":
+            if self.pacman.straight(self.env.walls) == 1:
+                #self.step += 1
+                #print('step = ', self.step)
+                pacman_state = np.append(self.pacman.position,
+                                         self.pacman_cardinal_points.index(self.pacman.cardinal_point))
+                next_s = pacman_state
+                return next_s
+            #self.pacman.visualization()
+        elif pacman_direction == "left":
+            self.pacman.left()
+            #self.pacman.visualization()
+        elif pacman_direction == "right":
+            self.pacman.right()
+            #self.pacman.visualization()
+        self.cv.set_agent(self.pacman, self.pacman.cardinal_point)
+        #time.sleep(0.3)
+
+        pacman_state = np.append(self.pacman.position,
+                                 self.pacman_cardinal_points.index(self.pacman.cardinal_point))
+        next_s = pacman_state
+        return next_s
 
 
 
