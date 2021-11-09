@@ -1,9 +1,8 @@
 import gym
-import torch
 from collections import Counter
 import matplotlib.pyplot as plt
 from torch.distributions import Categorical
-from scripts.mountainCarContinuous.policy import *
+from scripts.mountainCar.policy import *
 
 learning_rate = 0.001
 gamma = 0.99

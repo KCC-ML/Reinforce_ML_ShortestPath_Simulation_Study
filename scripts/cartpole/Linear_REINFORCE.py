@@ -29,6 +29,17 @@ def softmax_grad(softmax):
     return np.diagflat(s) - np.dot(s, s.T) # 2x2, gradient of log(soft_max policy)
 
 
+def calculate_q_values(rewards, gamma):
+    res = []
+    sum_rewards = 0.0
+    for r in rewards[::-1]:
+        sum_rewards *= gamma
+        sum_rewards += r
+        res.append(sum_rewards)
+
+    return np.log(list(res[::-1]))
+
+
 for e in range(NUM_EPISODES):
     state = env.reset()[None, :]
 
@@ -45,9 +56,12 @@ for e in range(NUM_EPISODES):
 
         dsoftmax = softmax_grad(probs)[action, :]
         dlog = dsoftmax / probs[0, action]
-        grad = state.T.dot(dlog[None, :])
+        # grad = state.T.dot(dlog[None, :])
+        grad = state.T.dot(dsoftmax[None, :])
+        # print("------------------------------------")
+        # print(f"{state.T} x {dsoftmax[None, :]} = {grad}")
 
-        grads.append(dsoftmax)
+        grads.append(grad)
         rewards.append(reward)
 
         score += reward
@@ -57,8 +71,10 @@ for e in range(NUM_EPISODES):
         if done:
             break
 
+    Q = calculate_q_values(rewards, GAMMA)
     for i in range(len(grads)):
-        w += LEARNING_RATE * grads[i] * sum([r * (GAMMA ** t) for t, r in enumerate(rewards[i:])])
+        # w += LEARNING_RATE * grads[i] * sum([r * (GAMMA ** t) for t, r in enumerate(rewards[i:])])
+        w += LEARNING_RATE * grads[i] * Q[i]
 
     episode_rewards.append(score)
     print("EP: " + str(e) + " Score: " + str(score) + "         ", end="\r", flush=False)
