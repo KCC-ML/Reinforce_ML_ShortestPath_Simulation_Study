@@ -1,7 +1,7 @@
 import time
 from pacman_entity import *
 from simulation_entity import *
-from TD_onestep import *
+from TD_nstep import *
 import threading
 import matplotlib.pyplot as plt
 
@@ -20,7 +20,7 @@ class World:
         self.pacman_action_list = ["straight", "left", "right"]
         self.pacman_cardinal_points = ["north", "east", "south", "west"]
 
-        self.model = TDZero(self)
+        self.model = TDNstep(self)
         self.thread = threading.Thread(target=self.model.iteration)
 
     def main(self):
@@ -40,7 +40,7 @@ class World:
         #print(self.model.policy_matrix)
         #print("Pacman arrived at goal in {} steps.".format(self.step))
         plt.plot(self.model.steps)
-        plt.ylim(0, 200)
+        #plt.ylim(0, 200)
         plt.show()
 
     def iter_step(self):
@@ -70,7 +70,8 @@ class World:
                 pacman_state = np.append(self.pacman.position,
                                          self.pacman_cardinal_points.index(self.pacman.cardinal_point))
                 next_s = pacman_state
-                return next_s
+                reward = 5
+                return next_s, reward
             #self.pacman.visualization()
         elif pacman_direction == "left":
             self.pacman.left()
@@ -84,7 +85,8 @@ class World:
         pacman_state = np.append(self.pacman.position,
                                  self.pacman_cardinal_points.index(self.pacman.cardinal_point))
         next_s = pacman_state
-        return next_s
+        reward = -1
+        return next_s, reward
 
 
 
