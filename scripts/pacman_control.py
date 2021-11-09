@@ -1,7 +1,7 @@
 import time
 from pacman_entity import *
 from simulation_entity import *
-from TD_nstep import *
+from TD_lambda_backward import *
 import threading
 import matplotlib.pyplot as plt
 
@@ -20,7 +20,7 @@ class World:
         self.pacman_action_list = ["straight", "left", "right"]
         self.pacman_cardinal_points = ["north", "east", "south", "west"]
 
-        self.model = TDNstep(self)
+        self.model = TDLbda(self)
         self.thread = threading.Thread(target=self.model.iteration)
 
     def main(self):
