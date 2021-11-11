@@ -56,8 +56,7 @@ for e in range(NUM_EPISODES):
 
         dsoftmax = softmax_grad(probs)[action, :]
         dlog = dsoftmax / probs[0, action]
-        # grad = state.T.dot(dlog[None, :])
-        grad = state.T.dot(dsoftmax[None, :])
+        grad = state.T.dot(dlog[None, :])
         # print("------------------------------------")
         # print(f"{state.T} x {dsoftmax[None, :]} = {grad}")
 
@@ -80,5 +79,6 @@ for e in range(NUM_EPISODES):
     print("EP: " + str(e) + " Score: " + str(score) + "         ", end="\r", flush=False)
 
 plt.plot(np.arange(NUM_EPISODES), episode_rewards)
+# plt.savefig('REINFORCE_linear_MC_softmax_others_result.png')
 plt.show()
 env.close()

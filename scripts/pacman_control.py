@@ -23,7 +23,7 @@ class World:
         self.thread = threading.Thread(target=self.iter_step)
         print("-------------------------------")
         # input("press any key")
-        self.algorithm = 'MCC' # ['random', 'MDP', 'MCP', 'TDn', 'fTDl', 'bTDl', 'MCC', 'SARSA', 'nSARSA', 'fSARSAl', 'bSARSAl']
+        self.algorithm = 'fSARSAl' # ['random', 'MDP', 'MCP', 'TDn', 'fTDl', 'bTDl', 'MCC', 'SARSA', 'nSARSA', 'fSARSAl', 'bSARSAl']
 
         self.step = 0
         self.pacman_action_list = [0, 1, 2]

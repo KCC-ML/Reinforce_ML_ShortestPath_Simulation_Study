@@ -7,17 +7,17 @@ from torch.distributions import Categorical
 import matplotlib.pyplot as plt
 import numpy as np
 
-learning_rate = 0.001
-gamma = 0.9
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 print(f"Using {device} device")
 
 
 class Policy(nn.Module):
-    def __init__(self):
+    def __init__(self, learning_rate=0.001, gamma=0.9):
         super(Policy, self).__init__()
         self.data = []
+        self.gamma = gamma
+        self.learning_rate = learning_rate
 
         self.model = nn.Sequential(
             nn.Linear(4, 128),
@@ -39,11 +39,11 @@ class Policy(nn.Module):
         self.data.append(item)
 
     def train_net(self, device):
-        R = 0
+        G_t = 0
         self.optimizer.zero_grad()
         for r, prob in self.data[::-1]:
-            R = r + gamma * R
-            loss = -torch.log(prob).to(device) * R
+            G_t = r + self.gamma * G_t
+            loss = -torch.log(prob).to(device) * G_t
             loss.backward()
         self.optimizer.step()
         self.data = []
@@ -65,7 +65,7 @@ def main():
         done = False
 
         while not done:
-            prob = pi(torch.from_numpy(state).float().to(device))
+            prob = pi(torch.from_numpy(state).float().to(device)) # forward, probability
             m = Categorical(prob)
             a = m.sample()
             next_state, reward, done, info = env.step(a.item())

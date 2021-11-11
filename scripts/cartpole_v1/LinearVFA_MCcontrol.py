@@ -1,20 +1,18 @@
-import numpy as np
 import gym
 from collections import deque
-from mpl_toolkits import mplot3d
+import numpy as np
 import matplotlib.pyplot as plt
-import os
+import time
 
-class linearVFA_MCcontrol():
+
+class linearVFA_MCcontrol_cartpole():
     def __init__(self):
-        self._env = gym.make('MountainCar-v0')
+        self._env = gym.make('CartPole-v1')
         self.que = deque([])
-
+        self.weight = np.zeros((self._env.action_space.n, self._env.observation_space.shape[0]))
+        self.epsilon = 0.01
         self.learning_rate = 0.01
         self.gamma = 0.9
-        self.epsilon = 0.1
-
-        self.weight = np.zeros((self._env.action_space.n, self._env.observation_space.shape[0]))
 
     def get_action(self, state):
         nA = self._env.action_space.n
@@ -26,7 +24,9 @@ class linearVFA_MCcontrol():
         return sample
 
     def Q(self, state, action):
-        return state.dot(self.weight[action])
+        value = state.dot(self.weight[action])
+
+        return value
 
     def update(self):
         G_t = 0
@@ -47,8 +47,8 @@ class linearVFA_MCcontrol():
 
 
 if __name__ == "__main__":
-    env = gym.make('MountainCar-v0')
-    agent = linearVFA_MCcontrol()
+    env = gym.make('CartPole-v1')
+    agent = linearVFA_MCcontrol_cartpole()
     rewards = []
 
     num_epi = 1000
@@ -63,6 +63,7 @@ if __name__ == "__main__":
 
             agent.que.append([state, action, reward])
             tot_reward += reward
+            # env.render()
 
             state = next_state
 
@@ -76,5 +77,9 @@ if __name__ == "__main__":
 
     fig = plt.subplots()
 
-    plt.plot(np.arange(num_epi), rewards)
+    x = np.arange(num_epi)
+    y = rewards
+
+    plt.plot(x, y, color='blue')
+    # plt.savefig('LinearVFA_MCcontrol_result_4.png')
     plt.show()

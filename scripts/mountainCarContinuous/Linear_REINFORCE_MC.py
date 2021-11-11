@@ -11,15 +11,18 @@ class MC_REINFORCE():
         self.gamma = 0.9
         self.sigma = 0.1
 
+        self._env = env
         self.model = np.zeros(env.observation_space.shape)
         self.data = []
 
     def cal_mu(self, state):
         return state.dot(self.model)
 
+    # Gaussian policy
     def get_action(self, state):
         mu = self.cal_mu(state)
         action = np.random.normal(mu, self.sigma, 1)
+        action = np.clip(action, self._env.action_space.low[0], self._env.action_space.high[0]) # make action inside of the range
 
         return action
 
@@ -33,7 +36,7 @@ class MC_REINFORCE():
             done = val[4]
 
             G_t = reward + self.gamma * G_t
-            dlog_policy = (action - self.cal_mu(state)) * state / self.sigma**2
+            dlog_policy = (action - self.cal_mu(state)) * state / (self.sigma**2)
             self.model += self.learning_rate * dlog_policy * G_t
 
         self.data = []
@@ -66,7 +69,7 @@ def start_training(num_episode):
 
         if (i_episode+1) % 20 == 0:
             print(f'{i_episode+1} episodes done!')
-            print(PG_model.model)
+            # print(PG_model.model)
 
     fig = plt.subplots()
     plt.plot(np.arange(num_episode), rewards)
