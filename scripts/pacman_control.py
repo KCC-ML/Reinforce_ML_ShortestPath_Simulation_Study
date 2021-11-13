@@ -1,7 +1,7 @@
 import time
 from pacman_entity import *
 from simulation_entity import *
-from TD_lambda_backward import *
+from SARSA_lambda_backward import *
 import threading
 import matplotlib.pyplot as plt
 
@@ -20,7 +20,7 @@ class World:
         self.pacman_action_list = ["straight", "left", "right"]
         self.pacman_cardinal_points = ["north", "east", "south", "west"]
 
-        self.model = TDLbda(self)
+        self.model = SARSALB(self)
         self.thread = threading.Thread(target=self.model.iteration)
 
     def main(self):
@@ -43,7 +43,7 @@ class World:
         #plt.ylim(0, 200)
         plt.show()
 
-    def iter_step(self):
+    def iter_step(self, pacman_direction):
         #self.step = 0
         #self.pacman.position = self.pacman.first_position
 
@@ -52,14 +52,6 @@ class World:
         #print("step: ", self.step)
         #pacman_direction = random.choice(self.pacman_action_list)
 
-        pacman_cardinal_point = self.pacman_cardinal_points.index(self.pacman.cardinal_point)
-        # print(self.model.policy_matrix.reshape(-1, 3))
-        # print(self.model.policy_matrix[
-        #           self.pacman.position[0] * (4 * 5) + self.pacman.position[1] * 4 + pacman_cardinal_point])
-        # print(self.pacman.position)
-        # print(pacman_cardinal_point)
-        pacman_direction = np.random.choice(self.pacman_action_list, 1, p=self.model.policy_matrix[
-            self.pacman.position[0] * (4 * 5) + self.pacman.position[1] * 4 + pacman_cardinal_point])
 
         #self.step += 1
 
@@ -69,9 +61,8 @@ class World:
                 #print('step = ', self.step)
                 pacman_state = np.append(self.pacman.position,
                                          self.pacman_cardinal_points.index(self.pacman.cardinal_point))
-                next_s = pacman_state
                 reward = 5
-                return next_s, reward
+                return pacman_state, reward
             #self.pacman.visualization()
         elif pacman_direction == "left":
             self.pacman.left()
@@ -84,10 +75,8 @@ class World:
 
         pacman_state = np.append(self.pacman.position,
                                  self.pacman_cardinal_points.index(self.pacman.cardinal_point))
-        next_s = pacman_state
         reward = -1
-        return next_s, reward
-
+        return pacman_state, reward
 
 
 if __name__ == '__main__':
