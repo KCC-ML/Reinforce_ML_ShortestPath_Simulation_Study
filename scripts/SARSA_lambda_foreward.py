@@ -107,7 +107,7 @@ class SARSALF:
                     nstep_G += (self.gamma ** (i - 1)) * R[i]
                 lambda_G += (self.lbda ** n) * (
                             nstep_G + (self.gamma ** n) * self.Q[self.transform_pair_index(pairs[n])])
-            lambda_G = (1 - self.lbda) * lambda_G + (self.lbda ** (T - 1)) #* nstep_G
+            lambda_G = (1 - self.lbda) * lambda_G + (self.lbda ** (T - 1)) * R[t]
             self.Q[self.transform_pair_index(pairs[0])] += self.alpha * (
                         lambda_G - self.Q[self.transform_pair_index(pairs[0])])
 
