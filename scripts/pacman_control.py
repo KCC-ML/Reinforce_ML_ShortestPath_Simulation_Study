@@ -1,7 +1,7 @@
 import time
 from pacman_entity import *
 from simulation_entity import *
-from SARSA_lambda_backward import *
+from Q_learning import *
 import threading
 import matplotlib.pyplot as plt
 
@@ -20,7 +20,7 @@ class World:
         self.pacman_action_list = ["straight", "left", "right"]
         self.pacman_cardinal_points = ["north", "east", "south", "west"]
 
-        self.model = SARSALB(self)
+        self.model = QLearning(self)
         self.thread = threading.Thread(target=self.model.iteration)
 
     def main(self):
