@@ -1,11 +1,10 @@
 import numpy as np
 import gym
 from collections import deque
-from mpl_toolkits import mplot3d
 import matplotlib.pyplot as plt
-import os
 
-class linearVFA_MCcontrol():
+
+class linearVFA_MCcontrol_MountainCar():
     def __init__(self):
         self._env = gym.make('MountainCar-v0')
         self.que = deque([])
@@ -26,9 +25,12 @@ class linearVFA_MCcontrol():
         return sample
 
     def Q(self, state, action):
-        return state.dot(self.weight[action])
+        value = state.dot(self.weight[action])
+
+        return value
 
     def update(self):
+        self.que.popleft()
         G_t = 0
         state = self.que[0][0]
         action = self.que[0][1]
@@ -46,14 +48,26 @@ class linearVFA_MCcontrol():
         self.que.clear()
 
 
+def state_transform(state):
+    position = state[0]
+    velocity = state[1]
+
+    transform_vel = np.exp(velocity)
+
+    res = np.array([position, transform_vel])
+    # print("func",state, res)
+    return res
+
+
 if __name__ == "__main__":
     env = gym.make('MountainCar-v0')
-    agent = linearVFA_MCcontrol()
+    agent = linearVFA_MCcontrol_MountainCar()
     rewards = []
 
     num_epi = 1000
     for i_epi in range(num_epi):
         state = env.reset()
+        # state = state_transform(state)
         tot_reward = 0
         done = False
 
@@ -64,10 +78,12 @@ if __name__ == "__main__":
             agent.que.append([state, action, reward])
             tot_reward += reward
 
+            # next_state = state_transform(next_state)
             state = next_state
 
         rewards.append(tot_reward)
         agent.update()
+        # print(agent.weight)
 
         if (i_epi+1) % 20 == 0:
             print(f"Policy update with {i_epi+1} with reward {tot_reward}!")
