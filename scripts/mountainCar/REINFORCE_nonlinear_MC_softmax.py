@@ -2,8 +2,10 @@ import gym
 from collections import Counter
 import matplotlib.pyplot as plt
 from torch.distributions import Categorical
-from scripts.mountainCar.policy import *
+from scripts.mountainCar.REINFORCE_nonlinear_MC_softmax_policy import *
+import matplotlib
 
+matplotlib.use('TkAgg')
 learning_rate = 0.001
 gamma = 0.99
 hidden = 128
@@ -25,7 +27,7 @@ losses = []
 actions = []
 
 high_score = 0
-for n_epi in range(episodes):
+for i_epi in range(episodes):
     observation = env.reset()
     done = False
     score = 0.0
@@ -40,7 +42,7 @@ for n_epi in range(episodes):
         score += new_reward
         actions.append(action.item())
 
-        if n_epi % 100 == 0:
+        if i_epi % 100 == 0:
             pass
             # env.render()
 
@@ -48,14 +50,17 @@ for n_epi in range(episodes):
         print("*** New highscore! ***")
         high_score = score
 
+    if (i_epi+1) % 20 == 0:
+        print(f"{i_epi+1} episodes done!")
+
     if done:
         scores.append(score)
-        if info['TimeLimit.truncated'] == True:
-            response = 'Step limit maxed.'
-        print(f"# of episode: {n_epi}, score: {score}")
-        if observation[0] >= 0.5:
-            print('Success')
-            break
+    #     if info['TimeLimit.truncated'] == True:
+    #         response = 'Step limit maxed.'
+    #     print(f"# of episode: {n_epi}, score: {score}")
+    #     if observation[0] >= 0.5:
+    #         print('Success')
+    #         break
 
     losses.append(agent.train(device))
 
